@@ -1,0 +1,15 @@
+{
+  "name": "@tooling/rollup-config",
+  "version": "0.0.0",
+  "scripts": {
+    "eslint": "eslint --cache --no-error-on-unmatched-pattern --max-warnings 20 './*.{js,jsx,ts,tsx,mjs}'"
+  },
+  "dependencies": {
+    "magic-string": "^0.30.2",
+    "rollup": "^3.28.0",
+    "rollup-plugin-esbuild": "^5.0.0"
+  },
+  "devDependencies": {
+    "@tooling/eslint-config": "*"
+  }
+}

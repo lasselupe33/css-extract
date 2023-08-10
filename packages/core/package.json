@@ -1,0 +1,41 @@
+{
+  "name": "@css-extract/core",
+  "version": "0.0.0",
+  "main": "lib/index.js",
+  "types": "src/index.ts",
+  "sideEffects": false,
+  "files": [
+    "lib/**/*",
+    "src/**/*"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "eslint",
+    "eslintplugin"
+  ],
+  "scripts": {
+    "eslint": "eslint --cache --no-error-on-unmatched-pattern --max-warnings 20 'src/**/*.{js,jsx,ts,tsx,mjs}'",
+    "type-check": "tsc -p tsconfig.json --noEmit",
+    "dev": "npx rollup -c rollup.config.js --watch",
+    "build": "npx rollup -c rollup.config.js"
+  },
+  "dependencies": {
+    "memfs": "^4.2.0",
+    "fs-monkey": "^1.0.4",
+    "fast-glob": "^3.3.1",
+    "esbuild": "^0.18.17",
+    "@rollup/plugin-typescript": "^11.1.2",
+    "magic-string": "^0.30.2",
+    "rollup": "^3.27.0",
+    "postcss": "^8.4.27",
+    "postcss-preset-env": "^9.1.0",
+    "rollup-plugin-esbuild": "^5.0.0"
+  },
+  "devDependencies": {
+    "@tooling/typescript-config": "*",
+    "@tooling/rollup-config": "*",
+    "@tooling/eslint-config": "*",
+    "tsx": "^3.12.7",
+    "@types/node": "^18.17.1"
+  }
+}

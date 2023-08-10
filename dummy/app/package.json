@@ -1,0 +1,30 @@
+{
+  "name": "@dummy/app",
+  "version": "0.0.0",
+  "main": "lib/index.js",
+  "types": "src/index.ts",
+  "files": [
+    "lib/**/*",
+    "src/**/*"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "eslint",
+    "eslintplugin"
+  ],
+  "scripts": {
+    "eslint": "eslint --cache --no-error-on-unmatched-pattern --max-warnings 20 'src/**/*.{js,jsx,ts,tsx,mjs}'",
+    "type-check": "tsc -p tsconfig.json --noEmit",
+    "dev:app": "npx rollup -c rollup.config.js --watch",
+    "build:app": "npx rollup -c rollup.config.js  --no-treeshake"
+  },
+  "dependencies": {
+    "@css-extract/core": "*"
+  },
+  "devDependencies": {
+    "@css-extract/rollup-plugin": "*",
+    "@tooling/typescript-config": "*",
+    "@tooling/eslint-config": "*",
+    "@types/node": "^18.17.1"
+  }
+}
