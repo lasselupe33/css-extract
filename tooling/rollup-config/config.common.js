@@ -44,7 +44,7 @@ function withCommonConfig(projectRoot, rollupConfig = {}) {
 
       assetFileNames: "[name][extname]",
       preserveModules: true,
-      sourcemap: true,
+      sourcemap: "inline",
       interop: "auto",
     },
 

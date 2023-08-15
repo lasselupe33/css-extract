@@ -60,9 +60,12 @@ export function extractCssPlugin(): Plugin {
 
         const processedCss = await postcss.process(resultingCss, {
           from: chunk.facadeModuleId,
+          to: outputFileName,
           map: {
             inline: true,
             from: chunk.facadeModuleId,
+            absolute: true,
+            sourcesContent: true,
           },
         });
 

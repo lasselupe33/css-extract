@@ -6,9 +6,14 @@ import "./test";
 import "./global";
 import "./formatted-list.style";
 
+const green = "blue";
+
+console.log("hi");
+
 export const myCss = css`
-  background: ${test};
-  align-self: start;
+  height: 500px;
+  background: ${green};
+  align-self: end;
 `;
 
 export const another = css`

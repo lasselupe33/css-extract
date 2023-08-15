@@ -20,7 +20,8 @@
     "build": "npx rollup -c rollup.config.js"
   },
   "dependencies": {
-    "esbuild": "^0.19.0"
+    "esbuild": "^0.19.0",
+    "fast-glob": "^3.3.1"
   },
   "devDependencies": {
     "@tooling/typescript-config": "*",

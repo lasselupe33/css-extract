@@ -10,7 +10,7 @@ module.exports = {
 
     assetFileNames: "[name][extname]",
     preserveModules: true,
-    sourcemap: true,
+    sourcemap: "inline",
     interop: "auto",
   },
 

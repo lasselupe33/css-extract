@@ -15,13 +15,28 @@
   "scripts": {
     "eslint": "eslint --cache --no-error-on-unmatched-pattern --max-warnings 20 'src/**/*.{js,jsx,ts,tsx,mjs}'",
     "type-check": "tsc -p tsconfig.json --noEmit",
-    "dev:app": "npx rollup -c rollup.config.js --watch",
-    "build:app": "npx rollup -c rollup.config.js  --no-treeshake"
+    "dev:app": "NODE_ENV=${NODE_ENV:-development} APP_ENV=${APP_ENV:-test} WEBPACK_DEV_SERVER_PORT=8081 WEBPACK_DISABLE_COMPRESSION=true webpack serve",
+    "build:app": "webpack"
   },
   "dependencies": {
-    "@css-extract/core": "*"
+    "@css-extract/core": "*",
+    "@dummy/package": "*",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1",
+    "clean-webpack-plugin": "^4.0.0",
+    "compression-webpack-plugin": "^10.0.0",
+    "copy-webpack-plugin": "^11.0.0",
+    "css-loader": "^6.8.1",
+    "css-minimizer-webpack-plugin": "^5.0.1",
+    "esbuild-loader": "^4.0.0",
+    "html-webpack-plugin": "^5.5.3",
+    "mini-css-extract-plugin": "^2.7.6",
+    "webpack-bundle-analyzer": "^4.9.0",
     "@css-extract/rollup-plugin": "*",
     "@tooling/typescript-config": "*",
     "@tooling/eslint-config": "*",
