@@ -29,7 +29,7 @@ export function extractCssPlugin(): Plugin {
 
     renderChunk: {
       order: "post",
-      async handler(source, chunk) {
+      async handler(source, chunk, options) {
         const s = new MagicString(source);
         const chunkMappings =
           mappings[
@@ -60,19 +60,26 @@ export function extractCssPlugin(): Plugin {
 
         const processedCss = await postcss.process(resultingCss, {
           from: chunk.facadeModuleId,
-          to: outputFileName,
+          to: `${options.dir}/${outputFileName}`,
           map: {
             inline: true,
             from: chunk.facadeModuleId,
             absolute: true,
             sourcesContent: true,
+            prev: s
+              .generateMap({
+                file: chunk.facadeModuleId,
+                hires: true,
+                includeContent: true,
+              })
+              .toString(),
           },
         });
 
         this.emitFile({
-          type: "asset",
+          type: "prebuilt-chunk",
           fileName: outputFileName,
-          source: processedCss.css,
+          code: processedCss.css,
         });
 
         s.prepend(`import "./${path.basename(outputFileName)}";\n`);

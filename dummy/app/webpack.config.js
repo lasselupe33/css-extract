@@ -44,10 +44,7 @@ module.exports = {
 
   mode: process.env.NODE_ENV === "production" ? "production" : "development",
 
-  devtool:
-    process.env.NODE_ENV === "production"
-      ? "source-map"
-      : "eval-cheap-module-source-map",
+  devtool: "source-map",
 
   optimization: {
     minimizer:
@@ -76,7 +73,7 @@ module.exports = {
           {
             loader: "css-loader",
             options: {
-              sourceMap: process.env.NODE_ENV !== "production",
+              sourceMap: true,
             },
           },
         ],

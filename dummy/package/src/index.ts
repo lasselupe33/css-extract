@@ -3,6 +3,8 @@ import { css } from "@css-extract/core";
 import { resultingValue, test, myCss as myCss2 } from "./imported";
 import "./test";
 
+export { myCss2 };
+
 import "./global";
 import "./formatted-list.style";
 
