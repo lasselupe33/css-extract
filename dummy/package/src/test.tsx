@@ -1,3 +1,3 @@
 export function hello() {
-  return <button>test</button>
+  return <button>test</button>;
 }

@@ -38,7 +38,8 @@ function withCommonConfig(projectRoot, rollupConfig = {}) {
 
     output: {
       dir: "lib",
-      format: "cjs",
+      format: "esm",
+      entryFileNames: "[name].mjs",
 
       ...rollupConfig.output,
 

@@ -1,5 +1,5 @@
-const esbuild = require("rollup-plugin-esbuild").default;
 const { extractCssPlugin } = require("@css-extract/rollup-plugin");
+const esbuild = require("rollup-plugin-esbuild").default;
 
 module.exports = {
   input: "./src/index.ts",

@@ -1,113 +1,78 @@
-import { spawnSync } from "child_process";
-import fs from "fs";
+import type { ChildProcessWithoutNullStreams } from "child_process";
+import { spawn } from "child_process";
+import path from "path";
 
-import esbuild from "esbuild";
-import type { Plugin } from "esbuild";
+import { MessagePrefixes } from "./constants";
+import { TEMP_ROOT } from "./util.generate-ast";
 
-type FileName = string;
-export type ExtractedCss = Record<
-  FileName,
-  Array<{ hash: string; css: string }>
->;
+let preparer: ChildProcessWithoutNullStreams;
 
-// STEP: Ensure that all side-effects are removed before evaluating css
-const stripSideEffectsPlugin = {
-  name: "strip-side-effects",
-  setup(build) {
-    build.onLoad({ filter: /\.tsx?$/ }, async (args) => {
-      const text = await fs.promises.readFile(args.path, "utf8");
-      const lines = text
-        .split("\n")
-        .filter((line) => !/^(\d|\w)*?\((\d|\w)*?\)/.test(line))
-        .join("\n");
+export async function initialize() {
+  preparer = spawn(
+    "node",
+    ["--loader", "./lib/loader.mjs", "./lib/empty.mjs"],
+    {
+      stdio: "overlapped",
+    }
+  );
 
-      return {
-        contents: lines,
-        loader: (args.path.split(".").at(-1) as "ts" | "tsx") ?? "ts",
-      };
-    });
-  },
-} as Plugin;
+  preparer.stdout.on("data", (data) => {
+    console.log(`[BACKEND]: ${data}`);
+  });
+  preparer.stderr.on("data", (data) => {
+    console.error(`[BACKEND]: ${data}`);
+  });
+}
 
-const exampleOnResolvePlugin = {
-  name: "externals",
-  setup(build) {
-    build.onResolve({ filter: /.*/ }, (args) => {
-      if (
-        args.path.startsWith(".") ||
-        ["@utils/", "@ui/"].some((it) => args.path.startsWith(it))
-      ) {
-        return null;
+export async function evaluate(filePath: string) {
+  const promise = new Promise((resolve, reject) => {
+    const onError = (err: Error) => {
+      preparer.stdout.off("data", callback);
+      preparer.stdout.off("error", onError);
+
+      reject(err);
+    };
+
+    const callback = (data: Buffer) => {
+      const msg = data.toString();
+
+      const lines = msg.split("\n").map((line) => line.trim());
+      const result = lines.find((line) =>
+        line.startsWith(MessagePrefixes.EVALUATED_FILE)
+      );
+
+      if (!result) {
+        return;
       }
 
-      return { external: true };
-    });
-  },
-} as Plugin;
+      preparer.stdout.off("data", callback);
+      preparer.stdout.off("error", onError);
 
-export async function prepare(): Promise<ExtractedCss> {
-  const result = await esbuild.build({
-    entryPoints: ["./src/index.ts"],
-    outfile: "./lib/out.js",
-    format: "cjs",
-    bundle: true,
-    write: false,
-    plugins: [exampleOnResolvePlugin, stripSideEffectsPlugin],
+      resolve(result);
+    };
+
+    preparer.stdout.on("data", callback);
+    preparer.stdout.on("error", onError);
   });
 
-  const bundleText = result.outputFiles[0]?.text;
-  let transformedText = "";
+  preparer.stdin.write(`${MessagePrefixes.EVAL_FILE}${filePath}\n`);
 
-  if (!bundleText) {
-    return {};
-  }
-
-  // STEP: Extract all css`...` statements from all virtual files
-  const virtualFiles = bundleText.split("// ");
-
-  for (const virtualFile of virtualFiles) {
-    if (!virtualFile) {
-      continue;
-    }
-
-    const [fileName, ...lines] = virtualFile.split("\n");
-    transformedText += `// ${fileName}\n`;
-
-    if (!fileName || lines.length === 0) {
-      continue;
-    }
-
-    const content = lines.join("\n");
-
-    transformedText += content.replaceAll(
-      /css`((.|\s)*?)`/gm,
-      (_) => `${_}.process("${fileName}")`
-    );
-  }
-
-  // STEP: Evaluate bundle to determine evaluated CSS statements
-  // @todo Use node VM?
-  const evaluated = spawnSync("node", {
-    input: transformedText,
-  }).stdout.toString("utf-8");
-  console.log(evaluated);
-
-  // STEP: Map evaluated CSS to original css``.
-  const results: Record<string, Array<{ hash: string; css: string }>> = {};
-
-  for (const line of evaluated.split("\n")) {
-    if (!line.startsWith(`{"__extracted":true`)) {
-      continue;
-    }
-
-    const output = JSON.parse(line);
-
-    results[output.fileName] ??= [];
-    results[output.fileName]!.push({
-      hash: output.hash,
-      css: output.css,
-    });
-  }
-
-  return results;
+  return await promise;
 }
+
+export async function destroy() {
+  preparer.kill(9);
+}
+
+async function tmp() {
+  await initialize();
+  const res = await evaluate(
+    path.join(TEMP_ROOT, "dummy", "package", "src", "shaker")
+  );
+
+  console.log("Result", res);
+
+  await destroy();
+}
+
+tmp();

@@ -9,3 +9,5 @@ export function resultingValue() {
 export const myCss = css`
   color: ${test};
 `;
+
+throw new Error("destruction!");

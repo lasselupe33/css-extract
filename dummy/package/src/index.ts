@@ -7,6 +7,7 @@ export { myCss2 };
 
 import "./global";
 import "./formatted-list.style";
+import "./third";
 
 const green = "blue";
 

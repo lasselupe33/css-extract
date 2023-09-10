@@ -15,15 +15,27 @@ const postcss = postcssRaw([
   }),
 ]);
 
-export function extractCssPlugin(): Plugin {
+type Options = {
+  entryPoint?: string;
+};
+
+export function extractCssPlugin(pluginOptions: Options): Plugin {
   let mappings: ExtractedCss = {};
 
   return {
     name: "test",
 
-    async buildStart() {
+    async buildStart(options) {
+      const input = Array.isArray(options.input)
+        ? options.input[0]
+        : pluginOptions.entryPoint;
+
+      if (!input) {
+        throw new Error("extractCssPlugin(): Cannot extract CSS entry point.");
+      }
+
       console.time("prepare");
-      mappings = await prepare();
+      mappings = await prepare({ entryPoint: input });
       console.timeEnd("prepare");
     },
 

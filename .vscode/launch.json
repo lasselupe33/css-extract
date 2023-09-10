@@ -20,6 +20,19 @@
       "internalConsoleOptions": "neverOpen",
       "disableOptimisticBPs": true,
       "runtimeExecutable": "npm"
+    },
+
+    {
+      "type": "node",
+      "name": "shaker",
+      "request": "launch",
+      "args": ["run", "start"],
+      "autoAttachChildProcesses": true,
+      "cwd": "${workspaceFolder}/packages/prepare",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "disableOptimisticBPs": true,
+      "runtimeExecutable": "npm"
     }
   ]
 }
