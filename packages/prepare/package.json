@@ -18,7 +18,8 @@
     "type-check": "tsc -p tsconfig.json --noEmit",
     "dev": "npx rollup -c rollup.config.js --watch",
     "build": "npx rollup -c rollup.config.js",
-    "start": "node ./lib/index.mjs"
+    "start": "node ./lib/index.mjs",
+    "new": "node --loader ./lib/loader.mjs ./lib/new.mjs"
   },
   "dependencies": {
     "@babel/parser": "^7.22.16",

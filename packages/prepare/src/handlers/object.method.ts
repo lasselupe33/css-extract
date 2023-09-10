@@ -3,12 +3,13 @@ import type * as t from "@babel/types";
 
 import type { TraceContext } from "../_trace";
 import { traceNodes } from "../_trace";
+import { nodeToKey } from "../util.node-to-key";
 
 export async function handleObjectMethod(
   ctx: TraceContext,
   path: NodePath<t.ObjectMethod>
 ) {
-  ctx.trackedNodes.add(path.node);
+  ctx.trackedNodes.add(nodeToKey(path.node));
 
   await traceNodes(
     [path.get("key"), ...path.get("params"), path.get("body")],

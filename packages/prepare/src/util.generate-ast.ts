@@ -2,7 +2,7 @@ import path from "node:path";
 
 import type { ParseResult } from "@babel/parser";
 import { parse } from "@babel/parser";
-import { cloneNode, type File } from "@babel/types";
+import { type File } from "@babel/types";
 import type { OutputFile } from "esbuild";
 import esbuild from "esbuild";
 

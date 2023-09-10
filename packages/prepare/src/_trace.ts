@@ -31,9 +31,13 @@ import { handleReturnStatement } from "./handlers/statement.return";
 import { handleTemplateElement } from "./handlers/template.element";
 import { handleTemplateLiteral } from "./handlers/template.literal";
 import { handleVariableDeclarator } from "./handlers/variable-declarator";
+import { nodeToKey } from "./util.node-to-key";
+
+export type NodeKey =
+  `${string}-${string},${string}:${string}@${string},${string}:${string}`;
 
 export type TraceContext = {
-  trackedNodes: Set<t.Node>;
+  trackedNodes: Set<NodeKey>;
   filePath: string;
 };
 
@@ -98,7 +102,7 @@ export async function traceNodes(
     | NodePath<t.Node | null | undefined>[]
     | undefined,
   ctx: TraceContext
-): Promise<Set<t.Node>> {
+) {
   const paths = pathOrPaths
     ? Array.isArray(pathOrPaths)
       ? pathOrPaths
@@ -107,24 +111,22 @@ export async function traceNodes(
 
   await Promise.all(
     paths.map(async (path) => {
-      if (path.node && ctx.trackedNodes.has(path.node)) {
+      if (path.node && ctx.trackedNodes.has(nodeToKey(path.node))) {
         return;
       }
 
       if (!path.node?.type) {
-        return [];
+        return;
       }
 
       const handler = handlers[path.node.type];
 
       if (!handler) {
         console.warn(`traceNode(${path.type}): No handler assigned`);
-        return [];
+        return;
       }
 
       return await handler(ctx, path as never);
     })
   );
-
-  return ctx.trackedNodes;
 }

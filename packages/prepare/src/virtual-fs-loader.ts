@@ -1,16 +1,18 @@
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import enhancedResolve from "enhanced-resolve";
 
+import { demo } from "./_root";
 import { initialize, vfs } from "./backend";
-import { prepare } from "./core.prepare";
+import { supportedExtensions } from "./constant.extensions";
+import { TEMP_ROOT } from "./util.generate-ast";
 
-const extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".mts", ".node"];
 const resolver = enhancedResolve.create.sync({
-  extensions,
+  extensions: supportedExtensions,
 });
 
-initialize();
+// initialize();
 
 export function resolve(
   specifier: string,
@@ -23,9 +25,11 @@ export function resolve(
   ) {
     const url = (() => {
       if (specifier.startsWith(".")) {
-        return new URL(specifier, context.parentURL).href;
+        return `${
+          new URL(specifier, context.parentURL).href
+        }?bust=${Math.random()}`;
       } else if (specifier.startsWith("/virtual")) {
-        return `file://${specifier}`;
+        return `file://${specifier}?bust=${Math.random()}`;
       } else {
         const resolved = resolver(
           context.parentURL.replace("file:///virtual/", ""),
@@ -33,10 +37,10 @@ export function resolve(
         );
 
         if (!resolved) {
-          return `file:///virtual/${specifier}`;
+          return `file:///virtual/${specifier}?bust=${Math.random()}`;
         }
 
-        return `file:///virtual/${resolved}`;
+        return `file:///virtual/${resolved}?bust=${Math.random()}`;
       }
     })();
 
@@ -59,22 +63,13 @@ export async function load(
     return next(url, context);
   }
 
-  const path = (() => {
-    const rawPath = fileURLToPath(url);
+  const path = fileURLToPath(url).replace("/virtual/", "");
 
-    if (extensions.some((ext) => rawPath.endsWith(ext))) {
-      return rawPath.split(".").slice(0, -1).join(".");
-    }
-
-    return rawPath;
-  })();
-
-  let content = vfs.get(path.replace("/virtual/", ""));
-  await prepare(path.replace("/virtual/", ""));
-
-  if (!content) {
-    content = vfs.get(path.replace("/virtual/", ""));
-  }
+  const content =
+    vfs.get(path) ||
+    supportedExtensions
+      .map((ext) => vfs.get(`${path}${ext}`))
+      .find((content) => !!content);
 
   return {
     format: "module",
@@ -82,3 +77,5 @@ export async function load(
     source: content,
   };
 }
+
+demo(path.join(TEMP_ROOT, "dummy", "package", "src", "shaker.ts"));

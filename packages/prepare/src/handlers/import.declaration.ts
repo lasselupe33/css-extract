@@ -5,9 +5,10 @@ import type { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import resolve from "enhanced-resolve";
 
+import { prepareFile } from "../_root";
 import type { TraceContext } from "../_trace";
 import { traceNodes } from "../_trace";
-import { shake } from "../core.prepare";
+import { nodeToKey } from "../util.node-to-key";
 
 const resolver = resolve.create({
   extensions: [".ts", ".tsx", ".js", ".jsx", ".mjs", ".mts", ".node"],
@@ -18,7 +19,7 @@ export async function handleImportDeclaration(
   ctx: TraceContext,
   path: NodePath<t.ImportDeclaration>
 ) {
-  ctx.trackedNodes.add(path.node);
+  ctx.trackedNodes.add(nodeToKey(path.node));
 
   await traceNodes([path.get("source"), ...path.get("specifiers")], ctx);
 
@@ -57,12 +58,7 @@ export async function handleImportDeclaration(
         ? "all"
         : specifiers.map((it) => it.value).filter((it): it is string => !!it);
 
-      const resolvedWithoutExtension = resolvedTarget
-        .split(".")
-        .slice(0, -1)
-        .join(".");
-
-      await shake(resolvedWithoutExtension, {
+      await prepareFile(resolvedTarget, {
         type: "imports",
         entries,
       });

@@ -1,6 +1,6 @@
 import readline from "readline";
 
-import { MessagePrefixes } from "./constants";
+import { MessagePrefixes } from "./constant.messages";
 import { evaluate } from "./core.evaluate";
 
 export const vfs = new Map<string, string>();
