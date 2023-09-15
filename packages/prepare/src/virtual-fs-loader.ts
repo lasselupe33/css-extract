@@ -1,4 +1,3 @@
-import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { supportedExtensions } from "@css-extract/utils";
@@ -63,12 +62,21 @@ export function resolve(
       return next(specifier);
     }
 
+    const deps = [...content.dependencies.values()]
+      .sort()
+      .map((dep) => {
+        const iteration = getVirtualContent(dep)?.iteration;
+
+        return `${dep}=${iteration}`;
+      })
+      .join("&");
+
     console.debug("[RESOLVE]", url, content.iteration);
 
     return {
       format: "module",
       shortCircuit: true,
-      url: `${url}?iteration=${content.iteration}`,
+      url: `${url}?iteration=${content.iteration}${deps ? `&${deps}` : ""}`,
     };
   }
 
@@ -104,6 +112,5 @@ function getVirtualContent(path: string) {
 }
 
 // initialize();
-const TEMP_ROOT = "/Users/lassefelskovagersten/Code/misc/css-extractor";
 
-demo(path.join(TEMP_ROOT, "dummy", "package", "src", "shaker.ts"));
+demo();

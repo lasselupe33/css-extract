@@ -7,11 +7,13 @@ import { transform } from "./stage.1.transform";
 import { traceReachableNodes } from "./stage.2.trace";
 import { pruneAST } from "./stage.3.prune";
 
+type FilePath = string;
 type ParentPath = string;
 type NodeName = string;
 
-const prepareCache = new WeakMap<
-  AST,
+const evaluatedASTs = new WeakSet<AST>();
+const requestedExportsCache = new Map<
+  FilePath,
   Record<ParentPath, NodeName[] | undefined>
 >();
 
@@ -22,21 +24,41 @@ export async function prepareFile(
 ) {
   const ast = await transform(filePath);
 
-  const cached = prepareCache.get(ast);
+  const cached = evaluatedASTs.has(ast);
+  const requestedExports = requestedExportsCache.get(filePath);
 
+  const allRequestedEntrypoints = Object.values(requestedExports ?? {})
+    .flatMap((it) => it)
+    .filter((it): it is string => !!it);
+
+  // @todo
   if (
-    parentPath &&
-    cached?.[parentPath] &&
-    entrypoints.type === "imports" &&
-    entrypoints.entries !== "all" &&
-    areArraysEqualSets(cached[parentPath] ?? [], entrypoints.entries)
+    (cached && !parentPath) ||
+    (cached &&
+      parentPath &&
+      !requestedExports?.[parentPath] &&
+      entrypoints.type === "imports" &&
+      entrypoints.entries !== "all" &&
+      entrypoints.entries.every((requestEntry) =>
+        allRequestedEntrypoints.includes(requestEntry)
+      )) ||
+    (parentPath &&
+      requestedExports?.[parentPath] &&
+      entrypoints.type === "imports" &&
+      entrypoints.entries !== "all" &&
+      areArraysEqualSets(
+        requestedExports[parentPath] ?? [],
+        entrypoints.entries
+      ))
   ) {
+    trackDependency(parentPath, filePath);
     return;
   }
 
-  prepareCache.set(ast, {
-    ...cached,
-    parentPath:
+  evaluatedASTs.add(ast);
+  requestedExportsCache.set(filePath, {
+    ...requestedExports,
+    [parentPath ?? ""]:
       entrypoints.type === "imports" && entrypoints.entries !== "all"
         ? entrypoints.entries
         : undefined,
@@ -46,7 +68,11 @@ export async function prepareFile(
     parentPath,
     filePath,
     ast,
-    entrypoints
+    // @todo, add new entrypoint which points to all previous entrypoints. But,
+    // we also need to import previous entrypoints, right?
+    entrypoints.entries.length === 0
+      ? { type: "imports", entries: allRequestedEntrypoints }
+      : entrypoints
   );
   const pruned = pruneAST(ast, tracedNodes);
 
@@ -55,5 +81,26 @@ export async function prepareFile(
   vfs.set(filePath, {
     content: pruned.code,
     iteration: (prev?.iteration ?? 0) + 1,
+    dependencies: prev?.dependencies ?? new Set(),
+  });
+
+  trackDependency(parentPath, filePath);
+}
+
+function trackDependency(parentPath: string | undefined, filePath: string) {
+  if (!parentPath) {
+    return;
+  }
+
+  const prevParentData = vfs.get(parentPath);
+
+  const deps = prevParentData?.dependencies ?? new Set();
+  deps.add(filePath);
+
+  vfs.set(parentPath, {
+    content: "",
+    iteration: 0,
+    ...prevParentData,
+    dependencies: deps,
   });
 }

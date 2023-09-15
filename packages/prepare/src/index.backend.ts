@@ -12,6 +12,7 @@ export const vfs = new Map<
   {
     content: string;
     iteration: number;
+    dependencies: Set<string>;
   }
 >();
 
