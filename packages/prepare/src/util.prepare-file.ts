@@ -1,11 +1,11 @@
 import type { TracerEntrypoints } from "@css-extract/trace";
+import { areArraysEqualSets } from "@css-extract/utils";
 
 import { vfs } from "./index.backend";
 import type { AST } from "./stage.1.transform";
 import { transform } from "./stage.1.transform";
 import { traceReachableNodes } from "./stage.2.trace";
 import { pruneAST } from "./stage.3.prune";
-import { areArraysEqualSets } from "./util.array-equality";
 
 type ParentPath = string;
 type NodeName = string;

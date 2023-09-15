@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@css-extract/trace": "*",
+    "@css-extract/utils": "*",
     "@babel/parser": "^7.22.16",
     "@babel/traverse": "^7.22.15",
     "@babel/types": "^7.22.15",

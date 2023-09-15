@@ -4,9 +4,8 @@ import path from "path";
 import type { ParseResult } from "@babel/parser";
 import { parse } from "@babel/parser";
 import type { File } from "@babel/types";
+import { supportedExtensions } from "@css-extract/utils";
 import esbuild from "esbuild";
-
-import { supportedExtensions } from "./constant.extensions";
 
 export type AST = ParseResult<File>;
 

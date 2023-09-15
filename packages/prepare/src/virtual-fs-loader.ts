@@ -1,12 +1,11 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { supportedExtensions } from "@css-extract/utils";
 import enhancedResolve from "enhanced-resolve";
 
-import { supportedExtensions } from "./constant.extensions";
 import { initialize, vfs } from "./index.backend";
 import { demo } from "./index.debug";
-import { TEMP_ROOT } from "./util.generate-ast";
 
 const resolver = enhancedResolve.create.sync({
   extensions: supportedExtensions,
@@ -88,5 +87,8 @@ function getVirtualContent(path: string) {
       .find((content) => !!content)
   );
 }
+
+// initialize();
+const TEMP_ROOT = "/Users/lassefelskovagersten/Code/misc/css-extractor";
 
 demo(path.join(TEMP_ROOT, "dummy", "package", "src", "shaker.ts"));
