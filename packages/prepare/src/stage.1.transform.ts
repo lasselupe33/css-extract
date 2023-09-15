@@ -10,21 +10,39 @@ import { supportedExtensions } from "./constant.extensions";
 
 export type AST = ParseResult<File>;
 
-type CacheEntry = {
+type CacheEntry = Promise<{
   lastModifiedMs: number;
   ast: AST;
-};
+}>;
 
 const cache = new Map<string, CacheEntry>();
 
 export async function transform(filePath: string): Promise<ParseResult<File>> {
-  const prevEntry = cache.get(filePath);
+  const prevEntryPromise = cache.get(filePath);
   const modifiedMs = (await fs.promises.stat(filePath)).mtimeMs;
 
-  if (prevEntry && modifiedMs === prevEntry.lastModifiedMs) {
-    return prevEntry.ast;
+  if (prevEntryPromise) {
+    const prevEntry = await prevEntryPromise;
+
+    if (prevEntry && modifiedMs === prevEntry.lastModifiedMs) {
+      return prevEntry.ast;
+    }
   }
 
+  const astPromise = transformSourceFileToAST(filePath);
+
+  cache.set(
+    filePath,
+    astPromise.then((ast) => ({
+      lastModifiedMs: modifiedMs,
+      ast,
+    }))
+  );
+
+  return await astPromise;
+}
+
+async function transformSourceFileToAST(filePath: string) {
   const transformed = await esbuild.build({
     entryPoints: [filePath],
     outdir: path.dirname(filePath),
@@ -43,11 +61,6 @@ export async function transform(filePath: string): Promise<ParseResult<File>> {
   }
 
   const ast = parse(transformedSource.text, { sourceType: "module" });
-
-  cache.set(filePath, {
-    lastModifiedMs: modifiedMs,
-    ast,
-  });
 
   return ast;
 }

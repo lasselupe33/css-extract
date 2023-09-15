@@ -1,14 +1,14 @@
 import type { NodePath } from "@babel/traverse";
 import _traverse from "@babel/traverse";
 import * as t from "@babel/types";
+import type { TracerEntrypoints } from "@css-extract/trace";
 
 import { transform } from "./stage.1.transform";
-import type { TracerEntrypoints } from "./stage.2.trace";
 
 // @ts-expect-error Poor ESM Compatibility
 const traverse = _traverse.default as typeof _traverse;
 
-export async function resolveEntrypoints(
+export async function resolveCssNodes(
   file: string
 ): Promise<TracerEntrypoints> {
   const ast = await transform(file);

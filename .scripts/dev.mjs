@@ -29,7 +29,3 @@ if (workspace) {
 } else {
   $`npx turbo dev --concurrency=100 --parallel`;
 }
-
-setTimeout(() => {
-  $`npx turbo dev:app --filter=${workspace} --parallel`;
-}, 1000);

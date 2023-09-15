@@ -26,7 +26,7 @@
       "type": "node",
       "name": "shaker",
       "request": "launch",
-      "args": ["run", "new"],
+      "args": ["run", "debug"],
       "autoAttachChildProcesses": true,
       "cwd": "${workspaceFolder}/packages/prepare",
       "console": "integratedTerminal",

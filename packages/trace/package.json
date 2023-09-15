@@ -1,5 +1,5 @@
 {
-  "name": "@css-extract/prepare",
+  "name": "@css-extract/trace",
   "version": "0.0.0",
   "main": "lib/index.mjs",
   "types": "src/index.ts",
@@ -17,12 +17,9 @@
     "eslint": "eslint --cache --no-error-on-unmatched-pattern --max-warnings 20 'src/**/*.{js,jsx,ts,tsx,mjs}'",
     "type-check": "tsc -p tsconfig.json --noEmit",
     "dev": "npx rollup -c rollup.config.js --watch",
-    "build": "npx rollup -c rollup.config.js",
-    "start": "node ./lib/index.mjs",
-    "debug": "node --loader ./lib/loader.mjs ./lib/empty.mjs"
+    "build": "npx rollup -c rollup.config.js"
   },
   "dependencies": {
-    "@css-extract/trace": "*",
     "@babel/parser": "^7.22.16",
     "@babel/traverse": "^7.22.15",
     "@babel/types": "^7.22.15",

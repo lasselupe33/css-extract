@@ -4,9 +4,10 @@ process.env.WORKSPACE_ROOT = __dirname;
 
 module.exports = withRecommendedConfig({
   input: {
-    new: "./src/_root.ts",
-    index: "./src/index.ts",
-    empty: "./src/empty.ts",
+    index: "./src/index.client.ts",
+    backend: "./src/index.backend.ts",
+    debug: "./src/index.debug.ts",
+    empty: "./src/index.empty.ts",
     loader: "./src/virtual-fs-loader.ts",
   },
 });

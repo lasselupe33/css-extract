@@ -1,6 +1,6 @@
 import _generate from "@babel/generator";
+import type { NodeKey } from "@css-extract/trace";
 
-import type { NodeKey } from "./_trace";
 import type { AST } from "./stage.1.transform";
 import { removeIrrelevantNodes } from "./util.filter-ast";
 

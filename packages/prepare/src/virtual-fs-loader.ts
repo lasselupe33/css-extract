@@ -3,9 +3,9 @@ import { fileURLToPath } from "node:url";
 
 import enhancedResolve from "enhanced-resolve";
 
-import { demo } from "./_root";
-import { initialize, vfs } from "./backend";
 import { supportedExtensions } from "./constant.extensions";
+import { initialize, vfs } from "./index.backend";
+import { demo } from "./index.debug";
 import { TEMP_ROOT } from "./util.generate-ast";
 
 const resolver = enhancedResolve.create.sync({
@@ -48,6 +48,8 @@ export function resolve(
     if (!content) {
       return next(specifier);
     }
+
+    console.debug("[LOAD]", url, content.iteration);
 
     return {
       format: "module",
