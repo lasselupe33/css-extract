@@ -3,6 +3,7 @@ import { promisify } from "util";
 
 import type { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
+import { supportedExtensions } from "@css-extract/utils";
 import resolve from "enhanced-resolve";
 
 import type { TraceContext } from "../core.trace";
@@ -10,7 +11,7 @@ import { traceNodes } from "../core.trace";
 import { nodeToKey } from "../util.node-to-key";
 
 const resolver = resolve.create({
-  extensions: [".ts", ".tsx", ".js", ".jsx", ".mjs", ".mts", ".node"],
+  extensions: supportedExtensions,
 });
 const asyncResolve = promisify(resolver);
 
