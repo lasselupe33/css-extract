@@ -25,11 +25,9 @@ export function resolve(
   ) {
     const url = (() => {
       if (specifier.startsWith(".")) {
-        return `${
-          new URL(specifier, context.parentURL).href
-        }?bust=${Math.random()}`;
+        return `${new URL(specifier, context.parentURL).href}`;
       } else if (specifier.startsWith("/virtual")) {
-        return `file://${specifier}?bust=${Math.random()}`;
+        return `file://${specifier}`;
       } else {
         const resolved = resolver(
           context.parentURL.replace("file:///virtual/", ""),
@@ -37,17 +35,24 @@ export function resolve(
         );
 
         if (!resolved) {
-          return `file:///virtual/${specifier}?bust=${Math.random()}`;
+          return `file:///virtual/${specifier}`;
         }
 
-        return `file:///virtual/${resolved}?bust=${Math.random()}`;
+        return `file:///virtual/${resolved}`;
       }
     })();
+
+    const path = fileURLToPath(url).replace("/virtual/", "");
+    const content = getVirtualContent(path);
+
+    if (!content) {
+      return next(specifier);
+    }
 
     return {
       format: "module",
       shortCircuit: true,
-      url: url,
+      url: `${url}?iteration=${content.iteration}`,
     };
   }
 
@@ -64,18 +69,22 @@ export async function load(
   }
 
   const path = fileURLToPath(url).replace("/virtual/", "");
-
-  const content =
-    vfs.get(path) ||
-    supportedExtensions
-      .map((ext) => vfs.get(`${path}${ext}`))
-      .find((content) => !!content);
+  const content = getVirtualContent(path);
 
   return {
     format: "module",
     shortCircuit: true,
-    source: content,
+    source: content?.content,
   };
+}
+
+function getVirtualContent(path: string) {
+  return (
+    vfs.get(path) ||
+    supportedExtensions
+      .map((ext) => vfs.get(`${path}${ext}`))
+      .find((content) => !!content)
+  );
 }
 
 demo(path.join(TEMP_ROOT, "dummy", "package", "src", "shaker.ts"));

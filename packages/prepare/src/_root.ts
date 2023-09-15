@@ -36,5 +36,10 @@ export async function prepareFile(
   const tracedNodes = await traceReachableNodes(filePath, ast, entrypoints);
   const pruned = pruneAST(ast, tracedNodes);
 
-  vfs.set(filePath, pruned.code);
+  const prev = vfs.get(filePath);
+
+  vfs.set(filePath, {
+    content: pruned.code,
+    iteration: (prev?.iteration ?? 0) + 1,
+  });
 }

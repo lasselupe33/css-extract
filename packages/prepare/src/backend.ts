@@ -3,7 +3,13 @@ import readline from "readline";
 import { MessagePrefixes } from "./constant.messages";
 import { evaluate } from "./core.evaluate";
 
-export const vfs = new Map<string, string>();
+export const vfs = new Map<
+  string,
+  {
+    content: string;
+    iteration: number;
+  }
+>();
 
 export function initialize() {
   const rl = readline.createInterface({
