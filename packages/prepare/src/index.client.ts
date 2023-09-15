@@ -1,9 +1,7 @@
 import type { ChildProcessWithoutNullStreams } from "child_process";
 import { spawn } from "child_process";
-import path from "path";
 
 import { MessagePrefixes } from "./constant.messages";
-import { TEMP_ROOT } from "./util.generate-ast";
 
 let preparer: ChildProcessWithoutNullStreams;
 

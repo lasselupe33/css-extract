@@ -12,6 +12,9 @@ export async function demo(filePath: string) {
   let end = performance.now();
 
   console.log(end - start);
+  console.log(evalutationResults);
+
+  evalutationResults.clear();
 
   start = performance.now();
   entrypoints = await resolveCssNodes(filePath);
@@ -22,4 +25,6 @@ export async function demo(filePath: string) {
   end = performance.now();
 
   console.log(end - start);
+
+  console.log(evalutationResults);
 }

@@ -5,7 +5,7 @@ export type NodeKey =
 
 export function nodeToKey(node: Node): NodeKey {
   if (!node.loc) {
-    throw new Error("Nodes must have a location attached.");
+    return JSON.stringify(node) as NodeKey;
   }
 
   return `${node.type}-${node.loc.start.line},${node.loc.start.column}:${node.loc.start.index}@${node.loc.end.line},${node.loc.end.column}:${node.loc.end.index}`;

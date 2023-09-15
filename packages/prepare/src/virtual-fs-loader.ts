@@ -1,5 +1,5 @@
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { supportedExtensions } from "@css-extract/utils";
 import enhancedResolve from "enhanced-resolve";
@@ -18,6 +18,21 @@ export function resolve(
   context: { conditions: string[]; parentURL: string },
   next: (...args: unknown[]) => void
 ) {
+  // We always want to use our original implementations of css-extract. No need
+  // to run these in a virtual environment.
+  if (specifier.includes("@css-extract/")) {
+    try {
+      const resolved = resolver(
+        context.parentURL.replace("file:///virtual/", ""),
+        specifier
+      );
+
+      return next(resolved ? pathToFileURL(resolved).pathname : specifier);
+    } catch {
+      return next(specifier);
+    }
+  }
+
   if (
     specifier.startsWith("/virtual") ||
     context?.parentURL?.startsWith("file:///virtual/")
@@ -48,7 +63,7 @@ export function resolve(
       return next(specifier);
     }
 
-    console.debug("[LOAD]", url, content.iteration);
+    console.debug("[RESOLVE]", url, content.iteration);
 
     return {
       format: "module",

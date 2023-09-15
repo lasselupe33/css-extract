@@ -13,6 +13,5 @@ export function pruneAST(ast: AST, reachableNodes: Set<NodeKey>) {
   removeIrrelevantNodes(clonedAST, reachableNodes);
 
   const source = generate(clonedAST.program);
-
   return source;
 }

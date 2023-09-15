@@ -23,6 +23,7 @@ import { handleImportSpecifier } from "./handlers/import.specifier";
 import { handleLiteral } from "./handlers/literal";
 import { handleObjectMethod } from "./handlers/object.method";
 import { handleObjectProperty } from "./handlers/object.property";
+import { handlePrivateName } from "./handlers/private-name";
 import { handleRestElement } from "./handlers/rest.element";
 import { handleBlockStatement } from "./handlers/statement.block";
 import { handleExpressionStatement } from "./handlers/statement.expression";
@@ -70,6 +71,7 @@ const handlers = {
 
   ObjectMethod: handleObjectMethod,
   ObjectProperty: handleObjectProperty,
+  PrivateName: handlePrivateName,
 
   FunctionDeclaration: handleFunctionDeclaration,
   VariableDeclaration: handleVariableDeclaration,

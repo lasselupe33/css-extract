@@ -1,8 +1,16 @@
 {
   "name": "@css-extract/prepare",
   "version": "0.0.0",
-  "main": "lib/index.mjs",
-  "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.client.ts",
+      "default": "./lib/index.mjs"
+    },
+    "./backend": {
+      "types": "./src/index.backend.ts",
+      "default": "./lib/backend.mjs"
+    }
+  },
   "sideEffects": false,
   "files": [
     "lib/**/*",

@@ -5,6 +5,8 @@ import { resolveCssNodes } from "./stage.0.entrypoints";
 import { evaluate } from "./stage.4.evaluate";
 import { prepareFile } from "./util.prepare-file";
 
+export type { EvaluationContext } from "./stage.4.evaluate";
+
 export const vfs = new Map<
   string,
   {
