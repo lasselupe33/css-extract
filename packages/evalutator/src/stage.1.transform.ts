@@ -65,6 +65,7 @@ async function transformSourceFileToAST(
     entryPoints: [filePath],
     outdir: path.dirname(filePath),
     format: "esm",
+    target: "node18",
     resolveExtensions: supportedExtensions,
     bundle: false,
     write: false,

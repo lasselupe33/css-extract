@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "main": "lib/index.js",
   "types": "src/index.ts",
+  "type": "module",
   "files": [
     "lib/**/*",
     "src/**/*"
@@ -16,7 +17,7 @@
     "eslint": "eslint --cache --no-error-on-unmatched-pattern --max-warnings 20 'src/**/*.{js,jsx,ts,tsx,mjs}'",
     "type-check": "tsc -p tsconfig.json --noEmit",
     "dev:app": "npx rollup -c rollup.config.js --watch",
-    "build:app": "npx rollup -c rollup.config.js --no-treeshake"
+    "build:app": "CSS_EXTRACT__DEBUG=true npx rollup -c rollup.config.js --no-treeshake"
   },
   "dependencies": {
     "@css-extract/core": "*"

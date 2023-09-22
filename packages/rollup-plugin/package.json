@@ -1,7 +1,7 @@
 {
   "name": "@css-extract/rollup-plugin",
   "version": "0.0.0",
-  "main": "lib/index.js",
+  "main": "lib/index.mjs",
   "types": "src/index.ts",
   "sideEffects": false,
   "files": [

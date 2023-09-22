@@ -15,6 +15,7 @@ function withEsbuildConfig(projectRoot, rollupConfig = {}) {
       esbuild({
         sourceMap: true,
         jsx: "automatic",
+        target: "node20",
       }),
       ...(rollupConfig.plugins ?? []),
     ],

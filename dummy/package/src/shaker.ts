@@ -3,7 +3,7 @@ import { css } from "@css-extract/core";
 import { myDependency } from "./common-dependency";
 import { myCss, test } from "./imported";
 
-const x = window.AbortSignal;
+const x = 2;
 const y = "hi";
 
 console.log(y);
@@ -74,6 +74,6 @@ css`
   }
 
   .${myCss} & {
-    color: red;
+    color: green;
   }
 `;

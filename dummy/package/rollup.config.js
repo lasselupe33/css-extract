@@ -1,8 +1,8 @@
-const { extractCssPlugin } = require("@css-extract/rollup-plugin");
-const esbuild = require("rollup-plugin-esbuild").default;
+import { extractCssPlugin } from "@css-extract/rollup-plugin";
+import esbuild from "rollup-plugin-esbuild";
 
-module.exports = {
-  input: "./src/index.ts",
+export default {
+  input: "./src/shaker.ts",
 
   output: {
     dir: "./lib",
