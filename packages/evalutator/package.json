@@ -1,5 +1,5 @@
 {
-  "name": "@css-extract/prepare",
+  "name": "@css-extract/evaluator",
   "version": "0.0.0",
   "exports": {
     ".": {

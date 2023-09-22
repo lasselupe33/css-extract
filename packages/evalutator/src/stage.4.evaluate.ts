@@ -21,7 +21,7 @@ export async function evaluate(filePath: string) {
     try {
       await import(`/virtual/${touchedFile}`);
     } catch (err) {
-      console.error("@css-extract/prepare(): Failed to evalutate code.");
+      console.error("@css-extract/evaluator: Failed to evalutate code.");
 
       if (err instanceof Error) {
         // re-map virtual files to their physical location on the file-system

@@ -28,7 +28,7 @@
       "request": "launch",
       "args": ["run", "debug"],
       "autoAttachChildProcesses": true,
-      "cwd": "${workspaceFolder}/packages/prepare",
+      "cwd": "${workspaceFolder}/packages/evaluator",
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "disableOptimisticBPs": true,

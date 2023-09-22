@@ -1,8 +1,9 @@
 import { css } from "@css-extract/core";
 
+import { myDependency } from "./common-dependency";
 import { myCss, test } from "./imported";
 
-const x = 2;
+const x = window.AbortSignal;
 const y = "hi";
 
 console.log(y);
@@ -51,6 +52,7 @@ export const linearClamp = (options: Props) => {
 };
 
 const another = css`
+  background: ${myDependency};
   color: green;
 `;
 

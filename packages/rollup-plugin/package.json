@@ -20,7 +20,7 @@
     "build": "npx rollup -c rollup.config.js"
   },
   "dependencies": {
-    "@css-extract/prepare": "*",
+    "@css-extract/evaluator": "*",
     "magic-string": "^0.30.2",
     "rollup": "^3.28.0",
     "postcss": "^8.4.27",

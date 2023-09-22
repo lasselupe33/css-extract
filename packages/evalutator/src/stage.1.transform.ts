@@ -74,7 +74,7 @@ async function transformSourceFileToAST(
 
   if (!transformedSource) {
     throw new Error(
-      `@css-extract/prepare.transform(${filePath}): Unable to transform file`
+      `@css-extract/evaluator.transform(${filePath}): Unable to transform file`
     );
   }
 

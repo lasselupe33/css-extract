@@ -1,4 +1,4 @@
-import type { EvaluationContext } from "@css-extract/prepare/backend";
+import type { EvaluationContext } from "@css-extract/evaluator/backend";
 
 let autoIncrementedId = 0;
 

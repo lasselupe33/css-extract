@@ -20,7 +20,7 @@
     "build": "npx rollup -c rollup.config.js"
   },
   "dependencies": {
-    "@css-extract/prepare": "*",
+    "@css-extract/evaluator": "*",
     "memfs": "^4.2.0",
     "fs-monkey": "^1.0.4",
     "fast-glob": "^3.3.1",

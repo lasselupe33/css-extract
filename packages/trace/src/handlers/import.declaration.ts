@@ -23,7 +23,11 @@ export async function handleImportDeclaration(
 
   await traceNodes([path.get("source"), ...path.get("specifiers")], ctx);
 
-  if (ctx.onNewFileVisited && t.isStringLiteral(path.node.source)) {
+  if (
+    ctx.onNewFileVisited &&
+    t.isStringLiteral(path.node.source) &&
+    !path.node.source.value.includes("@css-extract/")
+  ) {
     const target = path.node.source.value;
 
     try {

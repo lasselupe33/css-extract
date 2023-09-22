@@ -1,0 +1,1 @@
+export const myDependency = 6894;

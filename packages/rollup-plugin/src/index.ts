@@ -1,7 +1,7 @@
 import path from "path";
 
-import type { ExtractedCss } from "@css-extract/prepare";
-import { prepare } from "@css-extract/prepare";
+import type { ExtractedCss } from "@css-extract/evaluator";
+import { prepare } from "@css-extract/evaluator";
 import MagicString from "magic-string";
 import postcssRaw from "postcss";
 import postcssPresetEnv from "postcss-preset-env";

@@ -10,4 +10,8 @@ export const myCss = css`
   color: ${test};
 `;
 
+export const forShaker2 = css`
+  background: green;
+`;
+
 throw new Error("destruction!");
