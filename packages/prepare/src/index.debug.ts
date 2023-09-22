@@ -48,7 +48,7 @@ export async function demo() {
   evalutationResults.clear();
 
   //
-  // STEP 4
+  // STEP 3
   //
   start = performance.now();
 
@@ -66,6 +66,9 @@ export async function demo() {
   console.log(evalutationResults);
   console.log(end - start);
 
+  //
+  // STEP 4
+  //
   start = performance.now();
 
   await fs.promises.writeFile(

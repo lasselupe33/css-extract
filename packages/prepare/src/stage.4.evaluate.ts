@@ -18,6 +18,25 @@ export async function evaluate(filePath: string) {
   touchedFiles.add(filePath);
 
   for (const touchedFile of touchedFiles) {
-    await import(`/virtual/${touchedFile}`);
+    try {
+      await import(`/virtual/${touchedFile}`);
+    } catch (err) {
+      console.error("@css-extract/prepare(): Failed to evalutate code.");
+
+      if (err instanceof Error) {
+        // re-map virtual files to their physical location on the file-system
+        err.stack = err.stack
+          ?.split("\n")
+          .map((line) =>
+            line.replace(
+              /(at file:\/\/)\/virtual\/(.*?)\?.*?(:\d:\d)/g,
+              "$1$2$3"
+            )
+          )
+          .join("\n");
+
+        console.error(err);
+      }
+    }
   }
 }
