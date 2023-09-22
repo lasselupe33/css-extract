@@ -2,6 +2,11 @@ export type EvaluationContext = {
   fileName: string;
 };
 
+export type EvaluationResult = Record<
+  string,
+  Array<{ id: string; css: string; context: EvaluationContext }>
+>;
+
 declare global {
   const evalutationResults: Map<
     string,

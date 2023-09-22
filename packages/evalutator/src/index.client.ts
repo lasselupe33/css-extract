@@ -1,7 +1,9 @@
 import type { ChildProcessWithoutNullStreams } from "child_process";
 import { spawn } from "child_process";
+import path from "path";
 
 import { MessagePrefixes } from "./constant.messages";
+import type { EvaluationResult } from "./stage.4.evaluate";
 
 let preparer: ChildProcessWithoutNullStreams;
 
@@ -14,16 +16,19 @@ export async function initialize() {
     }
   );
 
-  preparer.stdout.on("data", (data) => {
-    console.log(`[BACKEND]: ${data}`);
-  });
-  preparer.stderr.on("data", (data) => {
-    console.error(`[BACKEND]: ${data}`);
-  });
+  if (process.env["CSS_EXTRACT__DEBUG"]) {
+    preparer.stderr.on("data", (data) => {
+      process.stderr.write(data);
+    });
+
+    preparer.stdout.on("data", (data) => {
+      process.stdout.write(data);
+    });
+  }
 }
 
 export async function evaluate(filePath: string) {
-  const promise = new Promise((resolve, reject) => {
+  const promise = new Promise<EvaluationResult>((resolve, reject) => {
     const onError = (err: Error) => {
       preparer.stdout.off("data", callback);
       preparer.stdout.off("error", onError);
@@ -46,7 +51,7 @@ export async function evaluate(filePath: string) {
       preparer.stdout.off("data", callback);
       preparer.stdout.off("error", onError);
 
-      resolve(result);
+      resolve(JSON.parse(result.slice(MessagePrefixes.EVALUATED_FILE.length)));
     };
 
     preparer.stdout.on("data", callback);
@@ -63,12 +68,21 @@ export async function destroy() {
 }
 
 // async function tmp() {
-//   await initialize();
-//   const res = await evaluate(
-//     path.join(TEMP_ROOT, "dummy", "package", "src", "shaker")
-//   );
+//   const TEMP_ROOT = "/Users/lassefelskovagersten/Code/misc/css-extractor";
+//   const demoRoot = path.join(TEMP_ROOT, "dummy", "package", "src");
+//   const entry1 = path.join(demoRoot, "shaker.ts");
+//   const entry2 = path.join(demoRoot, "shaker2.ts");
+//   const commonDependency = path.join(demoRoot, "common-dependency.ts");
+//   const irrelevant = path.join(demoRoot, "irrelevant.ts");
 
+//   await initialize();
+
+//   const res = await evaluate(entry1);
 //   console.log("Result", res);
+
+//   await evaluate(entry2);
+//   await evaluate(commonDependency);
+//   await evaluate(irrelevant);
 
 //   await destroy();
 // }

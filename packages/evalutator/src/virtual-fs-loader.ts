@@ -10,7 +10,8 @@ const resolver = enhancedResolve.create.sync({
   extensions: supportedExtensions,
 });
 
-// initialize();
+initialize();
+// demo();
 
 export function resolve(
   specifier: string,
@@ -110,7 +111,3 @@ function getVirtualContent(path: string) {
       .find((content) => !!content)
   );
 }
-
-// initialize();
-
-demo();

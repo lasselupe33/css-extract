@@ -29,13 +29,19 @@ export function initialize() {
       return;
     }
 
-    const filePath = msg.replace(MessagePrefixes.EVAL_FILE, "");
+    const filePath = msg.slice(MessagePrefixes.EVAL_FILE.length);
 
     const entrypoints = await resolveCssNodes(filePath);
     await prepareFile(undefined, filePath, entrypoints);
     await evaluate(filePath);
 
-    console.log(`\n${MessagePrefixes.EVALUATED_FILE}hejsa`);
+    console.log(
+      `\n${MessagePrefixes.EVALUATED_FILE}${JSON.stringify(
+        Object.fromEntries(evalutationResults.entries())
+      )}`
+    );
+
+    evalutationResults.clear();
   });
 
   rl.on("close", () => {
