@@ -1,1 +1,1 @@
-export const myDependency = 1481;
+export const myDependency = 1806;

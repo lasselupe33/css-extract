@@ -3,7 +3,7 @@ import path from "path";
 
 import type { ParseResult } from "@babel/parser";
 import { parse } from "@babel/parser";
-import type { NodePath, Visitor } from "@babel/traverse";
+import type { NodePath } from "@babel/traverse";
 import _traverse from "@babel/traverse";
 import type { File } from "@babel/types";
 import * as t from "@babel/types";
@@ -18,21 +18,14 @@ export type AST = ParseResult<File>;
 type CacheEntry = Promise<{
   lastModifiedMs: number;
   ast: AST;
+  cssPaths: NodePath<t.Node>[];
 }>;
-
-type TransformVisitors = Omit<Visitor, "TaggedTemplateExpression"> & {
-  TaggedTemplateExpression: (
-    path: NodePath<t.TaggedTemplateExpression>,
-    addedPaths: NodePath<t.Node>[]
-  ) => void;
-};
 
 const cache = new Map<string, CacheEntry>();
 
 export async function transform(
-  filePath: string,
-  visitors?: TransformVisitors
-): Promise<ParseResult<File>> {
+  filePath: string
+): Promise<{ cssPaths: NodePath<t.Node>[]; ast: AST }> {
   const prevEntryPromise = cache.get(filePath);
   const modifiedMs = (await fs.promises.stat(filePath)).mtimeMs;
 
@@ -40,27 +33,25 @@ export async function transform(
     const prevEntry = await prevEntryPromise;
 
     if (prevEntry && modifiedMs === prevEntry.lastModifiedMs) {
-      return prevEntry.ast;
+      return prevEntry;
     }
   }
 
-  const astPromise = transformSourceFileToAST(filePath, visitors);
+  const astPromise = transformSourceFileToAST(filePath);
 
   cache.set(
     filePath,
-    astPromise.then((ast) => ({
+    astPromise.then(({ ast, cssPaths }) => ({
       lastModifiedMs: modifiedMs,
       ast,
+      cssPaths,
     }))
   );
 
   return await astPromise;
 }
 
-async function transformSourceFileToAST(
-  filePath: string,
-  visitors?: TransformVisitors
-) {
+async function transformSourceFileToAST(filePath: string) {
   const transformed = await esbuild.build({
     // @todo implement pre stage that collects all entrypoints so we can do
     // this once instead of multiple times.
@@ -82,66 +73,66 @@ async function transformSourceFileToAST(
   }
 
   const ast = parse(transformedSource.text, { sourceType: "module" });
+  const cssPaths: NodePath<t.Node>[] = [];
 
   let index = 0;
 
   traverse(ast, {
-    ...visitors,
     TaggedTemplateExpression: (path) => {
-      if (t.isIdentifier(path.node.tag) && path.node.tag.name === "css") {
-        if (path.parent.type !== "MemberExpression") {
-          const importDeclaration = path.scope.getBinding(path.node.tag.name)
-            ?.path.parent;
+      if (!t.isIdentifier(path.node.tag) || path.node.tag.name !== "css") {
+        return;
+      }
 
-          // In case we're visiting something that is NOT our own css`` tag,
-          // then bail out on transformations
+      if (path.parent.type !== "MemberExpression") {
+        const importDeclaration = path.scope.getBinding(path.node.tag.name)
+          ?.path.parent;
+
+        // In case we're visiting something that is NOT our own css`` tag,
+        // then bail out on transformations
+        if (
+          !t.isImportDeclaration(importDeclaration) ||
+          importDeclaration.source.value !== "@css-extract/core"
+        ) {
+          return;
+        }
+
+        const name = (() => {
           if (
-            !t.isImportDeclaration(importDeclaration) ||
-            importDeclaration.source.value !== "@css-extract/core"
+            t.isVariableDeclarator(path.parent) &&
+            t.isIdentifier(path.parent.id)
           ) {
-            return visitors?.TaggedTemplateExpression?.(path, []);
+            return path.parent.id.name;
           }
 
-          const name = (() => {
-            if (
-              t.isVariableDeclarator(path.parent) &&
-              t.isIdentifier(path.parent.id)
-            ) {
-              return path.parent.id.name;
-            }
+          return undefined;
+        })();
 
-            return undefined;
-          })();
+        const added = path.replaceWith(
+          t.callExpression(
+            t.memberExpression(path.node, t.identifier("process")),
+            [
+              t.objectExpression([
+                t.objectProperty(
+                  t.identifier("fileName"),
+                  t.stringLiteral(filePath)
+                ),
+                t.objectProperty(
+                  t.identifier("name"),
+                  name ? t.stringLiteral(name) : t.nullLiteral()
+                ),
+                t.objectProperty(
+                  t.identifier("index"),
+                  t.numericLiteral(index++)
+                ),
+              ]),
+            ]
+          )
+        );
 
-          const added = path.replaceWith(
-            t.callExpression(
-              t.memberExpression(path.node, t.identifier("process")),
-              [
-                t.objectExpression([
-                  t.objectProperty(
-                    t.identifier("fileName"),
-                    t.stringLiteral(filePath)
-                  ),
-                  t.objectProperty(
-                    t.identifier("name"),
-                    name ? t.stringLiteral(name) : t.nullLiteral()
-                  ),
-                  t.objectProperty(
-                    t.identifier("index"),
-                    t.numericLiteral(index++)
-                  ),
-                ]),
-              ]
-            )
-          );
-
-          visitors?.TaggedTemplateExpression?.(path, added);
-        }
-      } else {
-        visitors?.TaggedTemplateExpression?.(path, []);
+        cssPaths.push(path.parentPath, ...added);
       }
     },
   });
 
-  return ast;
+  return { ast, cssPaths };
 }

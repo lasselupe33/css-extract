@@ -6,7 +6,6 @@ import { prepareFile } from "./util.prepare-file";
 
 type NodeName = string;
 
-const reachableNodesCache = new WeakMap<AST, Set<NodeKey>>();
 const entryPointForASTCache = new WeakMap<AST, NodeName[]>();
 
 export async function traceReachableNodes(
@@ -14,17 +13,8 @@ export async function traceReachableNodes(
   ast: AST,
   entrypoints: TracerEntrypoints
 ) {
-  const prevEntrypoints = entryPointForASTCache.get(ast);
-
   const resolvedEntrypoints = await resolveEntrypoints(ast, entrypoints);
-
-  const shouldRestart = prevEntrypoints?.some(
-    (entrypoint) => !resolvedEntrypoints.names.includes(entrypoint)
-  );
-
-  const reachableNodes = shouldRestart
-    ? new Set<NodeKey>()
-    : reachableNodesCache.get(ast) ?? new Set<NodeKey>();
+  const reachableNodes = new Set<NodeKey>();
 
   await traceNodes([...resolvedEntrypoints.paths], {
     trackedNodes: reachableNodes,
@@ -33,7 +23,6 @@ export async function traceReachableNodes(
   });
 
   entryPointForASTCache.set(ast, resolvedEntrypoints.names);
-  reachableNodesCache.set(ast, reachableNodes);
 
   return reachableNodes;
 }

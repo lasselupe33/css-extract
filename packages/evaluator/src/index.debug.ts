@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 
-import { resolveCssNodes } from "./stage.0.entrypoints";
 import { evaluate } from "./stage.4.evaluate";
 import { prepareFile } from "./util.prepare-file";
 
@@ -19,9 +18,8 @@ export async function demo() {
   // STEP 1
   //
   let start = performance.now();
-  let entrypoints = await resolveCssNodes(entry1);
 
-  await prepareFile(undefined, entry1, entrypoints);
+  await prepareFile(undefined, entry1);
 
   await evaluate(entry1);
   let end = performance.now();
@@ -35,9 +33,8 @@ export async function demo() {
   // STEP 2
   //
   start = performance.now();
-  entrypoints = await resolveCssNodes(entry2);
 
-  await prepareFile(undefined, entry2, entrypoints);
+  await prepareFile(undefined, entry2);
 
   await evaluate(entry2);
   end = performance.now();
@@ -57,8 +54,7 @@ export async function demo() {
     `export const myDependency = ${Math.round(Math.random() * 10000)};`
   );
 
-  entrypoints = await resolveCssNodes(irrelevant);
-  await prepareFile(undefined, irrelevant, entrypoints);
+  await prepareFile(undefined, irrelevant);
 
   await evaluate(irrelevant);
   end = performance.now();
@@ -76,8 +72,7 @@ export async function demo() {
     `export const myDependency = ${Math.round(Math.random() * 10000)};`
   );
 
-  entrypoints = await resolveCssNodes(irrelevant);
-  await prepareFile(undefined, irrelevant, entrypoints);
+  await prepareFile(undefined, irrelevant);
 
   await evaluate(irrelevant);
   end = performance.now();
@@ -95,9 +90,7 @@ export async function demo() {
     `export const myDependency = ${Math.round(Math.random() * 10000)};`
   );
 
-  entrypoints = await resolveCssNodes(commonDependency);
-
-  await prepareFile(undefined, commonDependency, entrypoints);
+  await prepareFile(undefined, commonDependency);
 
   await evaluate(commonDependency);
   end = performance.now();

@@ -22,6 +22,9 @@ export function extractCssPlugin(pluginOptions: Options): Plugin {
   const evaluator = makeEvaluator();
   const initializationPromise = evaluator.initialize();
 
+  let hasFinishedInitialBundle = false;
+  const filesToReTransform = new Set<string>();
+
   return {
     name: "test",
 
@@ -38,8 +41,14 @@ export function extractCssPlugin(pluginOptions: Options): Plugin {
       }
     },
 
+    shouldTransformCachedModule() {
+      return true;
+    },
+
     async transform(code, id) {
-      const evaluatedCss = await evaluator.evaluate(id);
+      const evaluatedCss = code.includes("css")
+        ? await evaluator.evaluate(id)
+        : undefined;
 
       if (!evaluatedCss || evaluatedCss.length === 0) {
         return;
@@ -61,6 +70,7 @@ export function extractCssPlugin(pluginOptions: Options): Plugin {
         return `"${mapping.id}"`;
       });
 
+      // @todo include relative path
       const outputFileName =
         getModuleFileNameWithoutExtension(id) + ".extracted.css";
 
@@ -97,6 +107,8 @@ export function extractCssPlugin(pluginOptions: Options): Plugin {
     },
 
     async closeBundle() {
+      hasFinishedInitialBundle = true;
+
       if (!this.meta.watchMode) {
         await evaluator.destroy();
       }

@@ -15,6 +15,7 @@ build
 
 # build output
 lib/
+dummy/
 
 # cache
 .eslintcache

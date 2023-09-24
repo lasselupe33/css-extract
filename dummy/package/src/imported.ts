@@ -1,6 +1,6 @@
 import { css } from "@css-extract/core";
 
-export const test = 2;
+export const test = 10;
 
 export function resultingValue() {
   return test + test;

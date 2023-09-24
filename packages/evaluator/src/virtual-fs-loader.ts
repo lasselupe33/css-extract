@@ -3,7 +3,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { supportedExtensions } from "@css-extract/utils";
 import enhancedResolve from "enhanced-resolve";
 
-import { initialize, vfs } from "./index.backend";
+import { depedencyCache, initialize, vfs } from "./index.backend";
 import { demo } from "./index.debug";
 
 const resolver = enhancedResolve.create.sync({
@@ -63,21 +63,14 @@ export function resolve(
       return next(specifier);
     }
 
-    const deps = [...content.dependencies.values()]
-      .sort()
-      .map((dep) => {
-        const iteration = getVirtualContent(dep)?.iteration;
-
-        return `${dep}=${iteration}`;
-      })
-      .join("&");
-
-    // console.debug("[RESOLVE]", url, content.iteration);
+    const searchParams = `${
+      url.includes("?") ? `&` : "?"
+    }deps=${getDependencyKey(path)}`;
 
     return {
       format: "module",
       shortCircuit: true,
-      url: `${url}?iteration=${content.iteration}${deps ? `&${deps}` : ""}`,
+      url: `${url}${searchParams}`,
     };
   }
 
@@ -103,11 +96,25 @@ export async function load(
   };
 }
 
-function getVirtualContent(path: string) {
+export function getVirtualContent(path: string, _vfs = vfs) {
   return (
-    vfs.get(path) ||
+    _vfs.get(path) ||
     supportedExtensions
-      .map((ext) => vfs.get(`${path}${ext}`))
+      .map((ext) => _vfs.get(`${path}${ext}`))
       .find((content) => !!content)
   );
+}
+
+function getDependencyKey(dependency: string): string {
+  const content = getVirtualContent(dependency);
+
+  if (!content) {
+    return dependency;
+  }
+
+  return `${dependency}=${content.iteration}&${[
+    ...(depedencyCache.get(dependency) ?? []),
+  ]
+    .map((subDependency) => getDependencyKey(subDependency))
+    .join("&")}`;
 }
