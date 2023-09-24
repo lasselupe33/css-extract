@@ -27,7 +27,7 @@
     "dev": "npx rollup -c rollup.config.js --watch",
     "build": "npx rollup -c rollup.config.js",
     "start": "CSS_EXTRACT__DEBUG=true node ./lib/index.mjs",
-    "debug": "node --loader ./lib/loader.mjs ./lib/empty.mjs"
+    "debug": "node --inspect --loader ./lib/loader.mjs ./lib/empty.mjs"
   },
   "dependencies": {
     "@css-extract/trace": "*",

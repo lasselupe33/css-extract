@@ -3,14 +3,14 @@ import { spawn } from "child_process";
 import path from "path";
 
 import { MessagePrefixes } from "./constant.messages";
-import type { EvaluationResult } from "./stage.4.evaluate";
+import type { EvaluatedNode } from "./stage.4.evaluate";
 
 export function makeEvaluator() {
   let preparer: ChildProcessWithoutNullStreams;
 
   async function initialize() {
     const libDir = path.dirname(new URL(import.meta.url).pathname);
-    console.log(libDir);
+
     preparer = spawn(
       "node",
       [
@@ -35,37 +35,41 @@ export function makeEvaluator() {
   }
 
   async function evaluate(filePath: string) {
-    const promise = new Promise<EvaluationResult>((resolve, reject) => {
-      const onError = (err: Error) => {
-        preparer.stdout.off("data", callback);
-        preparer.stdout.off("error", onError);
+    const evaluationFinishedKey = `${MessagePrefixes.EVALUATED_FILE}${filePath}:`;
 
-        reject(err);
-      };
+    const promise = new Promise<EvaluatedNode | undefined>(
+      (resolve, reject) => {
+        const onError = (err: Error) => {
+          preparer.stdout.off("data", callback);
+          preparer.stdout.off("error", onError);
 
-      const callback = (data: Buffer) => {
-        const msg = data.toString();
+          reject(err);
+        };
 
-        const lines = msg.split("\n").map((line) => line.trim());
-        const result = lines.find((line) =>
-          line.startsWith(MessagePrefixes.EVALUATED_FILE)
-        );
+        const callback = (data: Buffer) => {
+          const msg = data.toString();
 
-        if (!result) {
-          return;
-        }
+          const lines = msg.split("\n").map((line) => line.trim());
+          const result = lines.find((line) =>
+            line.startsWith(evaluationFinishedKey)
+          );
 
-        preparer.stdout.off("data", callback);
-        preparer.stdout.off("error", onError);
+          if (!result) {
+            return;
+          }
 
-        resolve(
-          JSON.parse(result.slice(MessagePrefixes.EVALUATED_FILE.length))
-        );
-      };
+          preparer.stdout.off("data", callback);
+          preparer.stdout.off("error", onError);
 
-      preparer.stdout.on("data", callback);
-      preparer.stdout.on("error", onError);
-    });
+          const rawResult = result.slice(evaluationFinishedKey.length);
+
+          resolve(rawResult ? JSON.parse(rawResult) : undefined);
+        };
+
+        preparer.stdout.on("data", callback);
+        preparer.stdout.on("error", onError);
+      }
+    );
 
     preparer.stdin.write(`${MessagePrefixes.EVAL_FILE}${filePath}\n`);
 

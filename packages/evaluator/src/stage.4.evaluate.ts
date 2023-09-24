@@ -1,17 +1,28 @@
 export type EvaluationContext = {
   fileName: string;
+  name: string | null;
+  index: number;
+  loc: {
+    start: {
+      line: number;
+      col: number;
+    };
+  };
 };
 
-export type EvaluationResult = Record<
-  string,
-  Array<{ id: string; css: string; context: EvaluationContext }>
->;
+export type EvaluationResult = Array<EvaluatedNode>;
+
+export type EvaluatedNode = {
+  id: string;
+  css: string;
+  context: EvaluationContext;
+};
+
+type FileName = string;
+type NodeId = string;
 
 declare global {
-  const evalutationResults: Map<
-    string,
-    Array<{ id: string; css: string; context: EvaluationContext }>
-  >;
+  const evalutationResults: Map<FileName, Map<NodeId, EvaluatedNode>>;
 }
 
 // @ts-expect-error We need to initialize our evaluationResults map at some point..

@@ -18,53 +18,22 @@ type Options = {
   entryPoint?: string;
 };
 
-const clock = {
-  totalTime: 0,
-  evalTime: 0,
-};
-
 export function extractCssPlugin(pluginOptions: Options): Plugin {
   const evaluator = makeEvaluator();
   const initializationPromise = evaluator.initialize();
-
-  let buildStartTime: number;
 
   return {
     name: "test",
 
     async buildStart() {
-      clock.evalTime = 0;
-      clock.totalTime = 0;
-
-      buildStartTime = performance.now();
       await initializationPromise;
     },
 
-    buildEnd() {
-      const buildTime = performance.now() - buildStartTime;
-      clock.totalTime += buildTime;
+    async transform(code, id) {
+      const x = await evaluator.evaluate(id);
+      console.log(x);
 
-      console.log(
-        `@css-extract: ${clock.evalTime.toFixed(2)}ms (${(
-          (100 * clock.evalTime) /
-          buildTime
-        ).toFixed(2)}%)`
-      );
-    },
-
-    transform: {
-      order: "post",
-      async handler(code, id) {
-        const evalStartTime = performance.now();
-        const x = await evaluator.evaluate(id);
-        clock.evalTime += performance.now() - evalStartTime;
-
-        console.log(id, x);
-
-        const out = this.parse(code);
-
-        return;
-      },
+      return;
     },
 
     async closeBundle() {

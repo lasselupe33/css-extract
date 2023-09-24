@@ -72,7 +72,7 @@ export function resolve(
       })
       .join("&");
 
-    console.debug("[RESOLVE]", url, content.iteration);
+    // console.debug("[RESOLVE]", url, content.iteration);
 
     return {
       format: "module",

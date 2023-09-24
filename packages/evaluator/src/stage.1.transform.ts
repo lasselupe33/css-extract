@@ -62,6 +62,8 @@ async function transformSourceFileToAST(
   visitors?: TransformVisitors
 ) {
   const transformed = await esbuild.build({
+    // @todo implement pre stage that collects all entrypoints so we can do
+    // this once instead of multiple times.
     entryPoints: [filePath],
     outdir: path.dirname(filePath),
     format: "esm",
@@ -81,11 +83,24 @@ async function transformSourceFileToAST(
 
   const ast = parse(transformedSource.text, { sourceType: "module" });
 
+  let index = 0;
+
   traverse(ast, {
     ...visitors,
     TaggedTemplateExpression: (path) => {
       if (t.isIdentifier(path.node.tag) && path.node.tag.name === "css") {
         if (path.parent.type !== "MemberExpression") {
+          const name = (() => {
+            if (
+              t.isVariableDeclarator(path.parent) &&
+              t.isIdentifier(path.parent.id)
+            ) {
+              return path.parent.id.name;
+            }
+
+            return undefined;
+          })();
+
           const added = path.replaceWith(
             t.callExpression(
               t.memberExpression(path.node, t.identifier("process")),
@@ -94,6 +109,14 @@ async function transformSourceFileToAST(
                   t.objectProperty(
                     t.identifier("fileName"),
                     t.stringLiteral(filePath)
+                  ),
+                  t.objectProperty(
+                    t.identifier("name"),
+                    name ? t.stringLiteral(name) : t.nullLiteral()
+                  ),
+                  t.objectProperty(
+                    t.identifier("index"),
+                    t.numericLiteral(index++)
                   ),
                 ]),
               ]

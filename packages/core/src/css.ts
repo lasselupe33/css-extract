@@ -1,4 +1,7 @@
-import type { EvaluationContext } from "@css-extract/evaluator/backend";
+import type {
+  EvaluationContext,
+  EvaluationResult,
+} from "@css-extract/evaluator/backend";
 
 let autoIncrementedId = 0;
 
@@ -16,10 +19,19 @@ export function css(
         .map((val, index) => `${val}${_exprs[index] ?? ""}`)
         .join("");
 
-      evalutationResults.set(context.fileName, [
-        ...(evalutationResults.get(context.fileName) ?? []),
-        { context, id, css },
-      ]);
+      const id = context.name ? `_${context.name}` : `_${context.index}`;
+
+      const fileResults =
+        evalutationResults.get(context.fileName) ??
+        new Map<string, EvaluationResult>();
+
+      fileResults.set(id, {
+        id,
+        css,
+        context,
+      });
+
+      evalutationResults.set(context.fileName, fileResults);
 
       return id;
     },

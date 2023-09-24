@@ -5,7 +5,7 @@ import { resolveCssNodes } from "./stage.0.entrypoints";
 import { evaluate } from "./stage.4.evaluate";
 import { prepareFile } from "./util.prepare-file";
 
-export type { EvaluationContext } from "./stage.4.evaluate";
+export type { EvaluationContext, EvaluatedNode } from "./stage.4.evaluate";
 
 export const vfs = new Map<
   string,
@@ -35,13 +35,17 @@ export function initialize() {
     await prepareFile(undefined, filePath, entrypoints);
     await evaluate(filePath);
 
-    console.log(
-      `\n${MessagePrefixes.EVALUATED_FILE}${JSON.stringify(
-        Object.fromEntries(evalutationResults.entries())
-      )}`
-    );
+    const results = evalutationResults.get(filePath)?.values();
 
-    evalutationResults.clear();
+    console.log(
+      `\n${MessagePrefixes.EVALUATED_FILE}${filePath}:${
+        results
+          ? JSON.stringify(
+              [...results].sort((a, b) => a.context.index - b.context.index)
+            )
+          : ""
+      }`
+    );
   });
 
   rl.on("close", () => {
