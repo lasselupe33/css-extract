@@ -54,17 +54,17 @@ export async function handleImportDeclaration(
           case "ImportNamespaceSpecifier":
             return {
               type: "all",
+              value: "",
             } as const;
         }
       });
 
-      const entries = specifiers.find((it) => it.type === "all")
-        ? "all"
-        : specifiers.map((it) => it.value).filter((it): it is string => !!it);
-
       await ctx.onNewFileVisited(ctx.filePath, resolvedTarget, {
-        type: "imports",
-        entries,
+        paths: [],
+        identifiers: specifiers
+          .filter((it) => it.type === "specifier")
+          .map((it) => it.value),
+        all: specifiers.some((it) => it.type === "all"),
       });
     } catch (err) {
       console.warn(`handleCallExpression.require(${target}): cannot resolve`);

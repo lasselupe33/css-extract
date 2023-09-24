@@ -9,6 +9,7 @@ export async function resolveCssNodes(
 ): Promise<TracerEntrypoints> {
   const entries: Array<NodePath<t.Node>> = [];
 
+  // @todo Can we do this more efficiently?
   await transform(filePath, {
     TaggedTemplateExpression: (path, addedPaths) => {
       if (t.isCallExpression(path.node)) {
@@ -17,5 +18,5 @@ export async function resolveCssNodes(
     },
   });
 
-  return { type: "paths", entries };
+  return { paths: entries, identifiers: [], all: false };
 }

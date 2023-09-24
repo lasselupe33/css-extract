@@ -29,11 +29,71 @@ export function extractCssPlugin(pluginOptions: Options): Plugin {
       await initializationPromise;
     },
 
-    async transform(code, id) {
-      const x = await evaluator.evaluate(id);
-      console.log(x);
+    async resolveId(source) {
+      if (source.includes(".extracted.css")) {
+        return {
+          id: source,
+          external: true,
+        };
+      }
+    },
 
-      return;
+    async transform(code, id) {
+      const evaluatedCss = await evaluator.evaluate(id);
+
+      if (!evaluatedCss || evaluatedCss.length === 0) {
+        return;
+      }
+
+      const s = new MagicString(code);
+      let resultingCss = "";
+
+      let index = 0;
+      s.replaceAll(/css`(.|\s)*?`/gm, (_) => {
+        const mapping = evaluatedCss[index++];
+
+        if (!mapping) {
+          return _;
+        }
+
+        resultingCss += `.${mapping.id} {${mapping.css.trim()}}\n`;
+
+        return `"${mapping.id}"`;
+      });
+
+      const outputFileName =
+        getModuleFileNameWithoutExtension(id) + ".extracted.css";
+
+      const processedCss = await postcss.process(resultingCss, {
+        from: id,
+        to: outputFileName,
+        map: {
+          inline: true,
+          from: id,
+          absolute: true,
+          sourcesContent: true,
+          prev: s
+            .generateMap({
+              file: id,
+              hires: true,
+              includeContent: true,
+            })
+            .toString(),
+        },
+      });
+
+      this.emitFile({
+        type: "prebuilt-chunk",
+        fileName: outputFileName,
+        code: processedCss.css,
+      });
+
+      s.prepend(`import "./${outputFileName}";\n`);
+
+      return {
+        code: s.toString(),
+        map: s.generateMap({ hires: true }),
+      };
     },
 
     async closeBundle() {
@@ -44,73 +104,12 @@ export function extractCssPlugin(pluginOptions: Options): Plugin {
     async closeWatcher() {
       await evaluator.destroy();
     },
-
-    // renderChunk: {
-    //   order: "post",
-    //   async handler(source, chunk, options) {
-    //     const s = new MagicString(source);
-    //     const chunkMappings =
-    //       mappings[
-    //         chunk.facadeModuleId?.replace(`${process.cwd()}/`, "") ?? ""
-    //       ];
-
-    //     if (!chunk.facadeModuleId || !chunkMappings) {
-    //       return null;
-    //     }
-
-    //     let resultingCss = "";
-
-    //     let index = 0;
-    //     s.replaceAll(/css`(.|\s)*?`/gm, (_) => {
-    //       const mapping = chunkMappings[index++];
-
-    //       if (!mapping) {
-    //         return _;
-    //       }
-
-    //       resultingCss += `.${mapping.hash} {${mapping.css.trim()}}\n`;
-
-    //       return `"${mapping.hash}"`;
-    //     });
-
-    //     const outputFileName =
-    // getModuleFileNameWithoutExtension(chunk.fileName) + ".extracted.css";
-
-    //     const processedCss = await postcss.process(resultingCss, {
-    //       from: chunk.facadeModuleId,
-    //       to: `${options.dir}/${outputFileName}`,
-    //       map: {
-    //         inline: true,
-    //         from: chunk.facadeModuleId,
-    //         absolute: true,
-    //         sourcesContent: true,
-    //         prev: s
-    //           .generateMap({
-    //             file: chunk.facadeModuleId,
-    //             hires: true,
-    //             includeContent: true,
-    //           })
-    //           .toString(),
-    //       },
-    //     });
-
-    //     this.emitFile({
-    //       type: "prebuilt-chunk",
-    //       fileName: outputFileName,
-    //       code: processedCss.css,
-    //     });
-
-    //     s.prepend(`import "./${path.basename(outputFileName)}";\n`);
-
-    //     return {
-    //       code: s.toString(),
-    //       map: s.generateMap({ hires: true }),
-    //     };
-    //   },
-    // },
   };
+}
 
-  function getModuleFileNameWithoutExtension(moduleId: string) {
-    return moduleId.replace(/\.[^.]*$/, "");
-  }
+function getModuleFileNameWithoutExtension(moduleId: string) {
+  return moduleId
+    .split(path.sep)
+    .at(-1)
+    ?.replace(/\.[^.]*$/, "");
 }

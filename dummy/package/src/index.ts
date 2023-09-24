@@ -9,12 +9,13 @@ import "./global";
 import "./formatted-list.style";
 import "./third";
 
-const green = "blue";
+const green = "green";
 
 console.log("hi");
 
 export const myCss = css`
-  height: 500px;
+  height: 800px;
+  width: ${resultingValue() * 400}px;
   background: ${green};
   align-self: end;
 `;

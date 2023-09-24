@@ -3,7 +3,7 @@ import { spawn } from "child_process";
 import path from "path";
 
 import { MessagePrefixes } from "./constant.messages";
-import type { EvaluatedNode } from "./stage.4.evaluate";
+import type { EvaluationResult } from "./stage.4.evaluate";
 
 export function makeEvaluator() {
   let preparer: ChildProcessWithoutNullStreams;
@@ -23,11 +23,11 @@ export function makeEvaluator() {
       }
     );
 
-    if (process.env["CSS_EXTRACT__DEBUG"]) {
-      preparer.stderr.on("data", (data) => {
-        process.stderr.write(data);
-      });
+    preparer.stderr.on("data", (data) => {
+      console.log(data.toString());
+    });
 
+    if (process.env["CSS_EXTRACT__DEBUG"] === "true") {
       preparer.stdout.on("data", (data) => {
         process.stdout.write(data);
       });
@@ -37,7 +37,7 @@ export function makeEvaluator() {
   async function evaluate(filePath: string) {
     const evaluationFinishedKey = `${MessagePrefixes.EVALUATED_FILE}${filePath}:`;
 
-    const promise = new Promise<EvaluatedNode | undefined>(
+    const promise = new Promise<EvaluationResult | undefined>(
       (resolve, reject) => {
         const onError = (err: Error) => {
           preparer.stdout.off("data", callback);

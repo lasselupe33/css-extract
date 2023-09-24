@@ -14,4 +14,4 @@ export const forShaker2 = css`
   background: green;
 `;
 
-throw new Error("destruction!");
+export const destruction = window.AbortController;

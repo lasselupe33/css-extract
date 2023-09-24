@@ -2,7 +2,10 @@ import { extractCssPlugin } from "@css-extract/rollup-plugin";
 import esbuild from "rollup-plugin-esbuild";
 
 export default {
-  input: "./src/shaker.ts",
+  input: {
+    index: "./src/index.ts",
+    shaker: "./src/shaker.ts",
+  },
 
   output: {
     dir: "./lib",

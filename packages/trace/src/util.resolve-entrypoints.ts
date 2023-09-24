@@ -6,32 +6,21 @@ import * as t from "@babel/types";
 // @ts-expect-error Poor ESM Compatibility
 const traverse = _traverse.default as typeof _traverse;
 
-export type TracerEntrypoints =
-  | {
-      type: "paths";
-      entries: NodePath<t.Node>[];
-    }
-  | {
-      type: "imports";
-      entries: "all" | string[];
-    };
+export type TracerEntrypoints = {
+  paths: NodePath<t.Node>[];
+  identifiers: string[];
+  all?: boolean;
+};
 
 export async function resolveEntrypoints(
   ast: ParseResult<t.File>,
-  entrypoints: TracerEntrypoints,
-  additionalEntrypoints?: string[]
+  entrypoints: TracerEntrypoints
 ) {
   const resolvedEntrypoints = (() => {
     const names: string[] = [];
-    const entries: NodePath<t.Node>[] =
-      entrypoints.type === "paths" ? entrypoints.entries : [];
-    const additional: NodePath<t.Node>[] = [];
+    const paths: NodePath<t.Node>[] = entrypoints.paths;
 
-    const targetedEntrypointIdentifiers = [
-      entrypoints.type === "imports" ? entrypoints.entries : [],
-    ].flatMap((it) => it);
-
-    const includeAll = targetedEntrypointIdentifiers.some((it) => it === "all");
+    const targetedEntrypointIdentifiers = entrypoints.identifiers;
 
     traverse(ast, {
       // @TODO
@@ -40,18 +29,14 @@ export async function resolveEntrypoints(
           ? path.node.exported.value
           : path.node.exported.name;
 
-        if (includeAll || targetedEntrypointIdentifiers.includes(value)) {
-          entries.push(path);
+        if (entrypoints.all || targetedEntrypointIdentifiers.includes(value)) {
+          paths.push(path);
           names.push(value);
-        }
-
-        if (additionalEntrypoints?.includes(value)) {
-          additional.push(path);
         }
       },
     });
 
-    return { entries, names, additional };
+    return { paths, names };
   })();
 
   return resolvedEntrypoints;

@@ -45,8 +45,8 @@ export async function evaluate(filePath: string) {
           ?.split("\n")
           .map((line) =>
             line.replace(
-              /(at file:\/\/)\/virtual\/(.*?)\?.*?(:\d:\d)/g,
-              "$1$2$3"
+              /((at )?file:\/\/)\/virtual\/(.*?)\?.*?(\d:\d)/g,
+              "$2$3$4"
             )
           )
           .join("\n");

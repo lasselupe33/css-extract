@@ -90,6 +90,18 @@ async function transformSourceFileToAST(
     TaggedTemplateExpression: (path) => {
       if (t.isIdentifier(path.node.tag) && path.node.tag.name === "css") {
         if (path.parent.type !== "MemberExpression") {
+          const importDeclaration = path.scope.getBinding(path.node.tag.name)
+            ?.path.parent;
+
+          // In case we're visiting something that is NOT our own css`` tag,
+          // then bail out on transformations
+          if (
+            !t.isImportDeclaration(importDeclaration) ||
+            importDeclaration.source.value !== "@css-extract/core"
+          ) {
+            return visitors?.TaggedTemplateExpression?.(path, []);
+          }
+
           const name = (() => {
             if (
               t.isVariableDeclarator(path.parent) &&

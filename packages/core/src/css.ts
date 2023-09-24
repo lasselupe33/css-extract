@@ -1,6 +1,8 @@
+import crypto from "crypto";
+
 import type {
+  EvaluatedNode,
   EvaluationContext,
-  EvaluationResult,
 } from "@css-extract/evaluator/backend";
 
 let autoIncrementedId = 0;
@@ -19,11 +21,14 @@ export function css(
         .map((val, index) => `${val}${_exprs[index] ?? ""}`)
         .join("");
 
-      const id = context.name ? `_${context.name}` : `_${context.index}`;
+      const hash = hashCode(`${context.fileName}${context.index}`);
+      const id = context.name
+        ? `_${hash}_${context.name}`
+        : `_${hash}_${context.index}`;
 
       const fileResults =
         evalutationResults.get(context.fileName) ??
-        new Map<string, EvaluationResult>();
+        new Map<string, EvaluatedNode>();
 
       fileResults.set(id, {
         id,
@@ -39,4 +44,14 @@ export function css(
       return id;
     },
   };
+}
+
+function hashCode(str: string) {
+  let hash = 0;
+  for (let i = 0, len = str.length; i < len; i++) {
+    const chr = str.charCodeAt(i);
+    hash = (hash << 5) - hash + chr;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
 }
