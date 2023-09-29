@@ -1,6 +1,5 @@
 import fs from "fs";
 
-import _generate from "@babel/generator";
 import type { NodePath } from "@babel/traverse";
 import type * as t from "@babel/types";
 import type { TracerEntrypoints } from "@css-extract/trace";
@@ -13,16 +12,13 @@ import { traceReachableNodes } from "./stage.2.trace";
 import { pruneAST } from "./stage.3.prune";
 import { getVirtualContent } from "./virtual-fs-loader";
 
-// @ts-expect-error Poor ESM Compatibility
-const generate = _generate.default as typeof _generate;
-
 type FilePath = string;
 type NodeName = string;
 
 const evaluatedASTs = new WeakSet<AST>();
 const requestedExportsCache = new Map<
   FilePath,
-  { identifiers: Set<NodeName>; cssPaths: NodePath<t.Node>[] }
+  { identifiers: Set<NodeName>; cssPaths: Set<NodePath<t.Node>> }
 >();
 
 export async function prepareFile(
@@ -35,7 +31,7 @@ export async function prepareFile(
   const cached = evaluatedASTs.has(ast);
   const requestedExports = requestedExportsCache.get(filePath) ?? {
     identifiers: new Set(),
-    cssPaths: [],
+    cssPaths: new Set(),
   };
 
   // In case we already have a pruned AST which contains all the requested
@@ -44,11 +40,10 @@ export async function prepareFile(
   if (
     cached &&
     !entrypoints?.all &&
-    areArraysEqualSets(
-      [...requestedExports.identifiers],
-      entrypoints?.identifiers ?? []
+    [...(entrypoints?.identifiers ?? [])].every((ident) =>
+      requestedExports.identifiers.has(ident)
     ) &&
-    areArraysEqualSets([...requestedExports.cssPaths], cssPaths)
+    areArraysEqualSets([...requestedExports.cssPaths], [...cssPaths])
   ) {
     await trackDependency(parentPath, filePath);
     return;
@@ -66,20 +61,30 @@ export async function prepareFile(
   });
 
   const pruned = await (async () => {
-    if (cssPaths.length === 0 && requestedExports.identifiers.size === 0) {
+    if (cssPaths.size === 0 && requestedExports.identifiers.size === 0) {
       return { code: "" };
     }
 
     const tracedNodes = await traceReachableNodes(filePath, ast, {
       ...entrypoints,
       paths: cssPaths,
-      identifiers: [...requestedExports.identifiers],
+      identifiers: requestedExports.identifiers,
     });
-    return pruneAST(ast, tracedNodes);
+
+    return {
+      code: pruneAST(ast, tracedNodes.reachableNodes).code,
+      encounteredImports: tracedNodes.encounteredImports,
+    };
   })();
 
   await updateVFS(filePath, pruned.code);
   await trackDependency(parentPath, filePath);
+
+  for (const [filePath, value] of pruned.encounteredImports?.entries() ?? []) {
+    for (const [parentPath, entrypoints] of value.entries()) {
+      await prepareFile(parentPath, filePath, entrypoints);
+    }
+  }
 }
 
 async function updateVFS(filePath: string, code: string) {

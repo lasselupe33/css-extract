@@ -7,8 +7,8 @@ import * as t from "@babel/types";
 const traverse = _traverse.default as typeof _traverse;
 
 export type TracerEntrypoints = {
-  paths: NodePath<t.Node>[];
-  identifiers: string[];
+  paths: Set<NodePath<t.Node>>;
+  identifiers: Set<string>;
   all?: boolean;
 };
 
@@ -17,8 +17,8 @@ export async function resolveEntrypoints(
   entrypoints: TracerEntrypoints
 ) {
   const resolvedEntrypoints = (() => {
-    const names: string[] = [];
-    const paths: NodePath<t.Node>[] = entrypoints.paths;
+    const names: Set<string> = new Set();
+    const paths: Set<NodePath<t.Node>> = entrypoints.paths;
 
     const targetedEntrypointIdentifiers = entrypoints.identifiers;
 
@@ -29,9 +29,9 @@ export async function resolveEntrypoints(
           ? path.node.exported.value
           : path.node.exported.name;
 
-        if (entrypoints.all || targetedEntrypointIdentifiers.includes(value)) {
-          paths.push(path);
-          names.push(value);
+        if (entrypoints.all || targetedEntrypointIdentifiers.has(value)) {
+          paths.add(path);
+          names.add(value);
         }
       },
     });

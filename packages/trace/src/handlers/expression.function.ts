@@ -5,11 +5,14 @@ import type { TraceContext } from "../core.trace";
 import { traceNodes } from "../core.trace";
 import { nodeToKey } from "../util.node-to-key";
 
-export async function handleImportDeclaration(
+export async function handleFunctionExpression(
   ctx: TraceContext,
-  path: NodePath<t.ImportDeclaration>
+  path: NodePath<t.FunctionExpression>
 ) {
   ctx.trackedNodes.add(nodeToKey(path.node));
 
-  await traceNodes([path.get("source"), ...path.get("specifiers")], ctx);
+  await traceNodes(
+    [path.get("id"), ...path.get("params"), path.get("body")],
+    ctx
+  );
 }

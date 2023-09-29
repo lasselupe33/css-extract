@@ -1,5 +1,5 @@
 import type { NodePath } from "@babel/traverse";
-import type * as t from "@babel/types";
+import * as t from "@babel/types";
 
 import type { TraceContext } from "../core.trace";
 import { traceNodes } from "../core.trace";
@@ -10,9 +10,15 @@ export async function handleExportSpecifier(
   path: NodePath<t.ExportSpecifier>
 ) {
   ctx.trackedNodes.add(nodeToKey(path.node));
+  ctx.trackedNodes.add(nodeToKey(path.parent));
 
-  await traceNodes(
-    [path.parentPath, path.get("exported"), path.get("local")],
-    ctx
-  );
+  if (
+    t.isExportDeclaration(path.parent) &&
+    "source" in path.parent &&
+    path.parent.source
+  ) {
+    ctx.trackedNodes.add(nodeToKey(path.parent.source));
+  }
+
+  await traceNodes([path.get("exported"), path.get("local")], ctx);
 }

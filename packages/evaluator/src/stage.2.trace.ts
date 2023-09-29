@@ -2,11 +2,10 @@ import type { NodeKey, TracerEntrypoints } from "@css-extract/trace";
 import { resolveEntrypoints, traceNodes } from "@css-extract/trace";
 
 import type { AST } from "./stage.1.transform";
-import { prepareFile } from "./util.prepare-file";
 
 type NodeName = string;
 
-const entryPointForASTCache = new WeakMap<AST, NodeName[]>();
+const entryPointForASTCache = new WeakMap<AST, Set<NodeName>>();
 
 export async function traceReachableNodes(
   filePath: string,
@@ -15,14 +14,15 @@ export async function traceReachableNodes(
 ) {
   const resolvedEntrypoints = await resolveEntrypoints(ast, entrypoints);
   const reachableNodes = new Set<NodeKey>();
+  const encounteredImports = new Map<string, Map<string, TracerEntrypoints>>();
 
   await traceNodes([...resolvedEntrypoints.paths], {
     trackedNodes: reachableNodes,
+    encounteredImports,
     filePath,
-    onNewFileVisited: prepareFile,
   });
 
   entryPointForASTCache.set(ast, resolvedEntrypoints.names);
 
-  return reachableNodes;
+  return { reachableNodes, encounteredImports };
 }

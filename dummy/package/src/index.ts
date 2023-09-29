@@ -10,12 +10,12 @@ import "./global";
 import "./formatted-list.style";
 import "./third";
 
-const green = "red";
+const green = "green";
 
 console.log("hi");
 
 export const myCss = css`
-  height: 1000px;
+  height: 2000px;
   width: ${resultingValue() * 10}px;
   background: ${green};
   align-self: end;

@@ -18,14 +18,14 @@ export type AST = ParseResult<File>;
 type CacheEntry = Promise<{
   lastModifiedMs: number;
   ast: AST;
-  cssPaths: NodePath<t.Node>[];
+  cssPaths: Set<NodePath<t.Node>>;
 }>;
 
 const cache = new Map<string, CacheEntry>();
 
 export async function transform(
   filePath: string
-): Promise<{ cssPaths: NodePath<t.Node>[]; ast: AST }> {
+): Promise<{ cssPaths: Set<NodePath<t.Node>>; ast: AST }> {
   const prevEntryPromise = cache.get(filePath);
   const modifiedMs = (await fs.promises.stat(filePath)).mtimeMs;
 
@@ -73,7 +73,7 @@ async function transformSourceFileToAST(filePath: string) {
   }
 
   const ast = parse(transformedSource.text, { sourceType: "module" });
-  const cssPaths: NodePath<t.Node>[] = [];
+  const cssPaths: Set<NodePath<t.Node>> = new Set();
 
   let index = 0;
 
@@ -129,7 +129,11 @@ async function transformSourceFileToAST(filePath: string) {
           )
         );
 
-        cssPaths.push(path.parentPath, ...added);
+        cssPaths.add(path.parentPath);
+
+        for (const add of added) {
+          cssPaths.add(add);
+        }
       }
     },
   });
