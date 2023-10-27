@@ -1,9 +1,7 @@
-import { css } from "@css-extract/core";
+import { css } from "@css-extract/global";
 
 css`
-  :global() {
-    body {
-      background: green;
-    }
+  body {
+    background: green;
   }
 `;

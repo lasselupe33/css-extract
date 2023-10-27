@@ -5,6 +5,7 @@ import "./test";
 import "./irrelevant";
 
 export { myCss2 };
+export * from "./test/file";
 
 import "./global";
 import "./formatted-list.style";

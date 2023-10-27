@@ -6,9 +6,7 @@ import type { NodePath } from "@babel/traverse";
 import _traverse from "@babel/traverse";
 import type { File } from "@babel/types";
 import * as t from "@babel/types";
-import { nodeSupportedExtensions } from "@css-extract/utils";
 
-import { loadSource } from "../util.load-source";
 import { transformSource } from "../util.transform-source";
 
 // @ts-expect-error Poor ESM Compatibility
@@ -53,12 +51,7 @@ export async function transform(
 }
 
 async function transformSourceFileToAST(filePath: string) {
-  const requiresESBuild = !nodeSupportedExtensions.some((ext) =>
-    filePath.endsWith(ext)
-  );
-  const source = requiresESBuild
-    ? await transformSource(filePath)
-    : await loadSource(filePath);
+  const source = await transformSource(filePath);
 
   if (!source) {
     throw new Error(
@@ -85,7 +78,8 @@ async function transformSourceFileToAST(filePath: string) {
         // then bail out on transformations
         if (
           !t.isImportDeclaration(importDeclaration) ||
-          importDeclaration.source.value !== "@css-extract/core"
+          (importDeclaration.source.value !== "@css-extract/core" &&
+            importDeclaration.source.value !== "@css-extract/global")
         ) {
           return;
         }

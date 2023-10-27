@@ -18,11 +18,12 @@ export function extractCssPlugin(): Plugin {
   const evaluator = makeEvaluator();
   const initializationPromise = evaluator.initialize();
 
+  let sourceBase: string | undefined;
+
   return {
     name: "@css-extract/rollup-plugin",
 
-    async buildStart(this, opts) {
-      console.log(opts);
+    async buildStart(this) {
       await initializationPromise;
     },
 
@@ -36,6 +37,10 @@ export function extractCssPlugin(): Plugin {
     },
 
     async transform(code, id) {
+      // @todo, how to resolve the base of the source directory properly?
+      if (!sourceBase) {
+        sourceBase = path.dirname(id);
+      }
       const evaluatedCss = await evaluator.evaluate(id);
 
       // Update CSS for all affected dependents
@@ -45,8 +50,9 @@ export function extractCssPlugin(): Plugin {
             .map((it) => `.${it.id} {${it.css.trim()}}`)
             .join("\n");
 
-          const dependentOutputFileName = `${getModuleFileNameWithoutExtension(
-            dependent
+          const dependentOutputFileName = `${resolveOutputFileName(
+            dependent,
+            sourceBase
           )}.extracted.css`;
 
           const processedCss = await processCss(
@@ -78,14 +84,18 @@ export function extractCssPlugin(): Plugin {
           return _;
         }
 
-        resultingCss += `.${mapping.id} {${mapping.css.trim()}}\n`;
+        if (mapping.context.isGlobal) {
+          resultingCss += `${mapping.css.trim()}\n`;
+        } else {
+          resultingCss += `.${mapping.id} {\n${mapping.css.trim()}\n}\n`;
+        }
 
         return `"${mapping.id}"`;
       });
 
       // @todo include relative path
       const outputFileName =
-        getModuleFileNameWithoutExtension(id) + ".extracted.css";
+        resolveOutputFileName(id, sourceBase) + ".extracted.css";
 
       sourceMapCache.set(
         outputFileName,
@@ -106,11 +116,16 @@ export function extractCssPlugin(): Plugin {
         code: processedCss.css,
       });
 
-      s.prepend(`import "./${outputFileName}";\n`);
+      s.prepend(`import "./${getFileNameWithoutPath(outputFileName)}";\n`);
+
+      const map = s.generateMap({ hires: true });
 
       return {
         code: s.toString(),
-        map: s.generateMap({ hires: true }),
+        map: {
+          ...map,
+          sourcesContent: map.sourcesContent?.map((it) => it || "") ?? [],
+        },
       };
     },
 
@@ -125,11 +140,15 @@ export function extractCssPlugin(): Plugin {
   };
 }
 
-function getModuleFileNameWithoutExtension(moduleId: string) {
+function resolveOutputFileName(moduleId: string, base: string | undefined) {
   return moduleId
-    .split(path.sep)
-    .at(-1)
-    ?.replace(/\.[^.]*$/, "");
+    .replace(base || "", "")
+    .replace(/^\//, "")
+    .replace(/\.[^.]*$/, "");
+}
+
+function getFileNameWithoutPath(filePath: string) {
+  return filePath.split(path.sep).at(-1);
 }
 
 const sourceMapCache = new Map<string, string>();

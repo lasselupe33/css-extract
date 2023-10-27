@@ -8,6 +8,7 @@ export type EvaluationContext = {
       col: number;
     };
   };
+  isGlobal?: boolean;
 };
 
 export type EvaluationResult = Array<EvaluatedNode>;

@@ -28,9 +28,12 @@ export function resolve(
         specifier
       );
 
-      return next(resolved ? pathToFileURL(resolved).pathname : specifier);
+      return next(
+        resolved ? pathToFileURL(resolved).pathname : specifier,
+        context
+      );
     } catch {
-      return next(specifier);
+      return next(specifier, context);
     }
   }
 
@@ -61,7 +64,7 @@ export function resolve(
     const content = getVirtualContent(path);
 
     if (!content) {
-      return next(specifier);
+      return next(specifier, context);
     }
 
     const pathURL = new URL(url);
@@ -74,7 +77,7 @@ export function resolve(
     };
   }
 
-  return next(specifier);
+  return next(specifier, context);
 }
 
 export async function load(

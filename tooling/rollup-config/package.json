@@ -6,7 +6,7 @@
   },
   "dependencies": {
     "magic-string": "^0.30.2",
-    "rollup": "^3.28.0",
+    "rollup": "^4.1.4",
     "rollup-plugin-esbuild": "^5.0.0",
     "@babel/core": "^7.21.0",
     "@babel/runtime": "^7.21.0",
