@@ -1,12 +1,11 @@
-import fs from "fs";
 import readline from "readline";
 
 import { MessagePrefixes } from "./constant.messages";
-import { evaluate } from "./stage.4.evaluate";
-import { prepareFile } from "./util.prepare-file";
-import { getVirtualContent } from "./virtual-fs-loader";
+import { fileIterationMap, getTransitiveParents } from "./core.deps";
+import { evaluate } from "./core.evaluate";
+import { prepareFile } from "./core.prepare-file/core.prepare-file";
 
-export type { EvaluationContext, EvaluatedNode } from "./stage.4.evaluate";
+export type { EvaluationContext, EvaluatedNode } from "./core.evaluate";
 
 type FilePath = string;
 
@@ -15,11 +14,9 @@ export type VirtualFileSystem = Map<
   {
     content: string;
     iteration: number;
-    sourceModifiedAtMs: number;
   }
 >;
 
-export const depedencyCache = new Map<FilePath, Set<FilePath>>();
 export const vfs: VirtualFileSystem = new Map();
 
 export function initialize() {
@@ -44,12 +41,44 @@ export function initialize() {
         const filePath = msg.slice(MessagePrefixes.EVAL_FILE.length);
         console.log("processing", filePath);
 
-        for (const changed of await changedDeps(filePath)) {
-          await prepareFile(undefined, changed);
+        fileIterationMap.set(
+          filePath,
+          (fileIterationMap.get(filePath) ?? 0) + 1
+        );
+
+        const dependents = getTransitiveParents(filePath);
+
+        for (const dependent of dependents) {
+          fileIterationMap.set(
+            dependent,
+            (fileIterationMap.get(dependent) ?? 0) + 1
+          );
         }
 
-        await prepareFile(undefined, filePath);
-        await evaluate(filePath);
+        const hasCssPaths = await prepareFile(undefined, filePath);
+
+        if (hasCssPaths) {
+          await evaluate(filePath);
+        }
+
+        for (const dependent of dependents) {
+          const hasCssPaths = await prepareFile(undefined, dependent);
+
+          if (hasCssPaths) {
+            await evaluate(dependent);
+            const results = evalutationResults.get(dependent)?.values();
+
+            console.log(
+              `\n${
+                MessagePrefixes.EVALUATED_DEPENDENT
+              }${filePath}:${dependent}:${JSON.stringify(
+                [...(results ?? [])].sort(
+                  (a, b) => a.context.index - b.context.index
+                )
+              )}`
+            );
+          }
+        }
 
         const results = evalutationResults.get(filePath)?.values();
 
@@ -69,20 +98,20 @@ export function initialize() {
   });
 }
 
-async function changedDeps(filePath: string): Promise<string[]> {
-  const dependencies = depedencyCache.get(filePath) ?? [];
+// async function changedDeps(filePath: string): Promise<string[]> {
+//   const dependencies = depedencyCache.get(filePath) ?? [];
 
-  const changed = await Promise.all(
-    [...dependencies].map(async (dependency) => {
-      const content = getVirtualContent(dependency);
-      const changedAt = (await fs.promises.stat(dependency)).mtimeMs;
+//   const changed = await Promise.all(
+//     [...dependencies].map(async (dependency) => {
+//       const content = getVirtualContent(dependency);
+//       const changedAt = (await fs.promises.stat(dependency)).mtimeMs;
 
-      return [
-        changedAt !== content?.sourceModifiedAtMs ? dependency : undefined,
-        ...(await changedDeps(dependency)),
-      ];
-    })
-  );
+//       return [
+//         changedAt !== content?.sourceModifiedAtMs ? dependency : undefined,
+//         ...(await changedDeps(dependency)),
+//       ];
+//     })
+//   );
 
-  return changed.flatMap((it) => it).filter((it): it is string => !!it);
-}
+//   return changed.flatMap((it) => it).filter((it): it is string => !!it);
+// }

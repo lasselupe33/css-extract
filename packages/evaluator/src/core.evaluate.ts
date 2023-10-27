@@ -16,6 +16,7 @@ export type EvaluatedNode = {
   id: string;
   css: string;
   context: EvaluationContext;
+  iteration: number;
 };
 
 type FileName = string;
@@ -30,7 +31,7 @@ globalThis.evalutationResults = new Map();
 
 export async function evaluate(filePath: string) {
   try {
-    await import(`/virtual/${filePath}?bust=${Math.random()}`);
+    await import(`/virtual/${filePath}`);
   } catch (err) {
     console.error("@css-extract/evaluator: Failed to evalutate code.");
 

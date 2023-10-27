@@ -1,5 +1,4 @@
 import fs from "fs";
-import path from "path";
 
 import type { ParseResult } from "@babel/parser";
 import { parse } from "@babel/parser";
@@ -7,8 +6,10 @@ import type { NodePath } from "@babel/traverse";
 import _traverse from "@babel/traverse";
 import type { File } from "@babel/types";
 import * as t from "@babel/types";
-import { supportedExtensions } from "@css-extract/utils";
-import esbuild from "esbuild";
+import { nodeSupportedExtensions } from "@css-extract/utils";
+
+import { loadSource } from "../util.load-source";
+import { transformSource } from "../util.transform-source";
 
 // @ts-expect-error Poor ESM Compatibility
 const traverse = _traverse.default as typeof _traverse;
@@ -52,27 +53,20 @@ export async function transform(
 }
 
 async function transformSourceFileToAST(filePath: string) {
-  const transformed = await esbuild.build({
-    // @todo implement pre stage that collects all entrypoints so we can do
-    // this once instead of multiple times.
-    entryPoints: [filePath],
-    outdir: path.dirname(filePath),
-    format: "esm",
-    target: "node18",
-    resolveExtensions: supportedExtensions,
-    bundle: false,
-    write: false,
-  });
+  const requiresESBuild = !nodeSupportedExtensions.some((ext) =>
+    filePath.endsWith(ext)
+  );
+  const source = requiresESBuild
+    ? await transformSource(filePath)
+    : await loadSource(filePath);
 
-  const transformedSource = transformed.outputFiles[0];
-
-  if (!transformedSource) {
+  if (!source) {
     throw new Error(
       `@css-extract/evaluator.transform(${filePath}): Unable to transform file`
     );
   }
 
-  const ast = parse(transformedSource.text, { sourceType: "module" });
+  const ast = parse(source, { sourceType: "module" });
   const cssPaths: Set<NodePath<t.Node>> = new Set();
 
   let index = 0;

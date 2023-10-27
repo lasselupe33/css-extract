@@ -3,7 +3,9 @@ import { spawn } from "child_process";
 import path from "path";
 
 import { MessagePrefixes } from "./constant.messages";
-import type { EvaluationResult } from "./stage.4.evaluate";
+import type { EvaluationResult } from "./core.evaluate";
+
+export type { EvaluationResult };
 
 export function makeEvaluator() {
   let preparer: ChildProcessWithoutNullStreams;
@@ -14,6 +16,7 @@ export function makeEvaluator() {
     preparer = spawn(
       "node",
       [
+        "--inspect",
         "--loader",
         path.resolve(libDir, "loader.mjs"),
         path.resolve(libDir, "empty.mjs"),
@@ -36,40 +39,61 @@ export function makeEvaluator() {
 
   async function evaluate(filePath: string) {
     const evaluationFinishedKey = `${MessagePrefixes.EVALUATED_FILE}${filePath}:`;
+    const dependentEvaluatedKey = `${MessagePrefixes.EVALUATED_DEPENDENT}${filePath}:`;
 
-    const promise = new Promise<EvaluationResult | undefined>(
-      (resolve, reject) => {
-        const onError = (err: Error) => {
-          preparer.stdout.off("data", callback);
-          preparer.stdout.off("error", onError);
+    const dependentChanges = new Map<string, EvaluationResult>();
 
-          reject(err);
-        };
+    const promise = new Promise<{
+      result: EvaluationResult | undefined;
+      dependents: Map<string, EvaluationResult>;
+    }>((resolve, reject) => {
+      const onError = (err: Error) => {
+        preparer.stdout.off("data", callback);
+        preparer.stdout.off("error", onError);
 
-        const callback = (data: Buffer) => {
-          const msg = data.toString();
+        reject(err);
+      };
 
-          const lines = msg.split("\n").map((line) => line.trim());
-          const result = lines.find((line) =>
-            line.startsWith(evaluationFinishedKey)
-          );
+      const callback = (data: Buffer) => {
+        const msg = data.toString();
 
-          if (!result) {
-            return;
+        const lines = msg.split("\n").map((line) => line.trim());
+        const result = lines.find((line) =>
+          line.startsWith(evaluationFinishedKey)
+        );
+        const dependentChanged = lines.find((line) =>
+          line.startsWith(dependentEvaluatedKey)
+        );
+
+        if (dependentChanged) {
+          const [dependentName, ...evaluationResult] = dependentChanged
+            .slice(dependentEvaluatedKey.length)
+            .split(":");
+
+          if (dependentName && evaluationResult) {
+            dependentChanges.set(
+              dependentName,
+              JSON.parse(evaluationResult.join(":"))
+            );
           }
+        }
 
-          preparer.stdout.off("data", callback);
-          preparer.stdout.off("error", onError);
+        if (!result) {
+          return;
+        }
 
-          const rawResult = result.slice(evaluationFinishedKey.length);
+        preparer.stdout.off("data", callback);
+        preparer.stdout.off("error", onError);
 
-          resolve(rawResult ? JSON.parse(rawResult) : undefined);
-        };
+        const rawResult = result.slice(evaluationFinishedKey.length);
+        const parsedResult = rawResult ? JSON.parse(rawResult) : undefined;
 
-        preparer.stdout.on("data", callback);
-        preparer.stdout.on("error", onError);
-      }
-    );
+        resolve({ result: parsedResult, dependents: dependentChanges });
+      };
+
+      preparer.stdout.on("data", callback);
+      preparer.stdout.on("error", onError);
+    });
 
     preparer.stdin.write(`${MessagePrefixes.EVAL_FILE}${filePath}\n`);
 

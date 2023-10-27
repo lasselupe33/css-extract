@@ -1,5 +1,3 @@
-import crypto from "crypto";
-
 import type {
   EvaluatedNode,
   EvaluationContext,
@@ -30,10 +28,13 @@ export function css(
         evalutationResults.get(context.fileName) ??
         new Map<string, EvaluatedNode>();
 
+      const prev = fileResults.get(id);
+
       fileResults.set(id, {
         id,
         css,
         context,
+        iteration: prev?.iteration ? prev.iteration + 1 : 1,
       });
 
       evalutationResults.set(context.fileName, fileResults);

@@ -14,21 +14,15 @@ const postcss = postcssRaw([
   }),
 ]);
 
-type Options = {
-  entryPoint?: string;
-};
-
-export function extractCssPlugin(pluginOptions: Options): Plugin {
+export function extractCssPlugin(): Plugin {
   const evaluator = makeEvaluator();
   const initializationPromise = evaluator.initialize();
 
-  let hasFinishedInitialBundle = false;
-  const filesToReTransform = new Set<string>();
-
   return {
-    name: "test",
+    name: "@css-extract/rollup-plugin",
 
-    async buildStart() {
+    async buildStart(this, opts) {
+      console.log(opts);
       await initializationPromise;
     },
 
@@ -41,16 +35,35 @@ export function extractCssPlugin(pluginOptions: Options): Plugin {
       }
     },
 
-    shouldTransformCachedModule() {
-      return true;
-    },
-
     async transform(code, id) {
-      const evaluatedCss = code.includes("css")
-        ? await evaluator.evaluate(id)
-        : undefined;
+      const evaluatedCss = await evaluator.evaluate(id);
 
-      if (!evaluatedCss || evaluatedCss.length === 0) {
+      // Update CSS for all affected dependents
+      if (this.meta.watchMode) {
+        for (const [dependent, result] of evaluatedCss?.dependents ?? []) {
+          const css = result
+            .map((it) => `.${it.id} {${it.css.trim()}}`)
+            .join("\n");
+
+          const dependentOutputFileName = `${getModuleFileNameWithoutExtension(
+            dependent
+          )}.extracted.css`;
+
+          const processedCss = await processCss(
+            css,
+            dependent,
+            dependentOutputFileName
+          );
+
+          this.emitFile({
+            type: "prebuilt-chunk",
+            fileName: dependentOutputFileName,
+            code: processedCss.css,
+          });
+        }
+      }
+
+      if (!evaluatedCss?.result || evaluatedCss.result.length === 0) {
         return;
       }
 
@@ -59,7 +72,7 @@ export function extractCssPlugin(pluginOptions: Options): Plugin {
 
       let index = 0;
       s.replaceAll(/css`(.|\s)*?`/gm, (_) => {
-        const mapping = evaluatedCss[index++];
+        const mapping = evaluatedCss.result?.[index++];
 
         if (!mapping) {
           return _;
@@ -74,23 +87,18 @@ export function extractCssPlugin(pluginOptions: Options): Plugin {
       const outputFileName =
         getModuleFileNameWithoutExtension(id) + ".extracted.css";
 
-      const processedCss = await postcss.process(resultingCss, {
-        from: id,
-        to: outputFileName,
-        map: {
-          inline: true,
-          from: id,
-          absolute: true,
-          sourcesContent: true,
-          prev: s
-            .generateMap({
-              file: id,
-              hires: true,
-              includeContent: true,
-            })
-            .toString(),
-        },
-      });
+      sourceMapCache.set(
+        outputFileName,
+        s
+          .generateMap({
+            file: id,
+            hires: true,
+            includeContent: true,
+          })
+          .toString()
+      );
+
+      const processedCss = await processCss(resultingCss, id, outputFileName);
 
       this.emitFile({
         type: "prebuilt-chunk",
@@ -107,8 +115,6 @@ export function extractCssPlugin(pluginOptions: Options): Plugin {
     },
 
     async closeBundle() {
-      hasFinishedInitialBundle = true;
-
       if (!this.meta.watchMode) {
         await evaluator.destroy();
       }
@@ -124,4 +130,22 @@ function getModuleFileNameWithoutExtension(moduleId: string) {
     .split(path.sep)
     .at(-1)
     ?.replace(/\.[^.]*$/, "");
+}
+
+const sourceMapCache = new Map<string, string>();
+
+async function processCss(css: string, fileId: string, outName: string) {
+  const sourceMap = sourceMapCache.get(outName);
+
+  return await postcss.process(css, {
+    from: fileId,
+    to: outName,
+    map: {
+      inline: true,
+      from: fileId,
+      absolute: true,
+      sourcesContent: true,
+      prev: sourceMap,
+    },
+  });
 }

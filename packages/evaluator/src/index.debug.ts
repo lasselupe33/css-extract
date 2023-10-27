@@ -1,8 +1,8 @@
 import fs from "fs";
 import path from "path";
 
-import { evaluate } from "./stage.4.evaluate";
-import { prepareFile } from "./util.prepare-file";
+import { evaluate } from "./core.evaluate";
+import { prepareFile } from "./core.prepare-file/core.prepare-file";
 
 const TEMP_ROOT = "/Users/lassefelskovagersten/Code/misc/css-extractor";
 
@@ -19,7 +19,7 @@ export async function demo() {
   //
   let start = performance.now();
 
-  await prepareFile(undefined, entry1);
+  await prepareFile(entry1);
 
   await evaluate(entry1);
   let end = performance.now();
@@ -34,7 +34,7 @@ export async function demo() {
   //
   start = performance.now();
 
-  await prepareFile(undefined, entry2);
+  await prepareFile(entry2);
 
   await evaluate(entry2);
   end = performance.now();
@@ -54,7 +54,7 @@ export async function demo() {
     `export const myDependency = ${Math.round(Math.random() * 10000)};`
   );
 
-  await prepareFile(undefined, irrelevant);
+  await prepareFile(irrelevant);
 
   await evaluate(irrelevant);
   end = performance.now();
@@ -72,7 +72,7 @@ export async function demo() {
     `export const myDependency = ${Math.round(Math.random() * 10000)};`
   );
 
-  await prepareFile(undefined, irrelevant);
+  await prepareFile(irrelevant);
 
   await evaluate(irrelevant);
   end = performance.now();
@@ -90,7 +90,7 @@ export async function demo() {
     `export const myDependency = ${Math.round(Math.random() * 10000)};`
   );
 
-  await prepareFile(undefined, commonDependency);
+  await prepareFile(commonDependency);
 
   await evaluate(commonDependency);
   end = performance.now();

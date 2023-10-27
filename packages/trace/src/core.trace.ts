@@ -140,11 +140,11 @@ export async function traceNodes(
       ctx.trackedNodes.has(nodeToKey(path.node)) &&
       !MUST_RETRACE[path.node.type]
     ) {
-      return;
+      continue;
     }
 
     if (!path.node?.type) {
-      return;
+      continue;
     }
 
     const handler = handlers[path.node.type];

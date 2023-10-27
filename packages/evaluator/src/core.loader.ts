@@ -3,7 +3,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { supportedExtensions } from "@css-extract/utils";
 import enhancedResolve from "enhanced-resolve";
 
-import { depedencyCache, initialize, vfs } from "./index.backend";
+import { getFileIteration } from "./core.deps";
+import { initialize, vfs } from "./index.backend";
 import { demo } from "./index.debug";
 
 const resolver = enhancedResolve.create.sync({
@@ -15,7 +16,7 @@ initialize();
 
 export function resolve(
   specifier: string,
-  context: { conditions: string[]; parentURL: string },
+  context: { conditions: string[]; parentURL: string | undefined },
   next: (...args: unknown[]) => void
 ) {
   // We always want to use our original implementations of css-extract. No need
@@ -23,7 +24,7 @@ export function resolve(
   if (specifier.includes("@css-extract/")) {
     try {
       const resolved = resolver(
-        context.parentURL.replace("file:///virtual/", ""),
+        context.parentURL?.replace("file:///virtual/", "") ?? process.cwd(),
         specifier
       );
 
@@ -44,7 +45,7 @@ export function resolve(
         return `file://${specifier}`;
       } else {
         const resolved = resolver(
-          context.parentURL.replace("file:///virtual/", ""),
+          context.parentURL?.replace("file:///virtual/", "") ?? process.cwd(),
           specifier
         );
 
@@ -63,14 +64,13 @@ export function resolve(
       return next(specifier);
     }
 
-    const searchParams = `${
-      url.includes("?") ? `&` : "?"
-    }deps=${getDependencyKey(path)}`;
+    const pathURL = new URL(url);
+    pathURL.searchParams.set("iteration", `${getFileIteration(path)}`);
 
     return {
       format: "module",
       shortCircuit: true,
-      url: `${url}${searchParams}`,
+      url: pathURL.href,
     };
   }
 
@@ -103,18 +103,4 @@ export function getVirtualContent(path: string, _vfs = vfs) {
       .map((ext) => _vfs.get(`${path}${ext}`))
       .find((content) => !!content)
   );
-}
-
-function getDependencyKey(dependency: string): string {
-  const content = getVirtualContent(dependency);
-
-  if (!content) {
-    return dependency;
-  }
-
-  return `${dependency}=${content.iteration}&${[
-    ...(depedencyCache.get(dependency) ?? []),
-  ]
-    .map((subDependency) => getDependencyKey(subDependency))
-    .join("&")}`;
 }

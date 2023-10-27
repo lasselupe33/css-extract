@@ -1,8 +1,9 @@
 import _generate from "@babel/generator";
 import type { NodeKey } from "@css-extract/trace";
 
+import { removeIrrelevantNodes } from "../util.filter-ast";
+
 import type { AST } from "./stage.1.transform";
-import { removeIrrelevantNodes } from "./util.filter-ast";
 
 // @ts-expect-error Poor ESM Compatibility
 const generate = _generate.default as typeof _generate;
