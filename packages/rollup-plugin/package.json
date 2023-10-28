@@ -1,6 +1,6 @@
 {
   "name": "@css-extract/rollup-plugin",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "main": "lib/index.mjs",
   "types": "src/index.ts",
   "sideEffects": false,
@@ -20,7 +20,7 @@
     "build": "npx rollup -c rollup.config.js"
   },
   "dependencies": {
-    "@css-extract/evaluator": "0.0.0",
+    "@css-extract/evaluator": "0.1.0",
     "magic-string": "^0.30.2",
     "rollup": "^4.1.4",
     "postcss": "^8.4.27",

@@ -1,6 +1,6 @@
 {
   "name": "@css-extract/evaluator",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "exports": {
     ".": {
       "types": "./src/index.client.ts",
@@ -29,8 +29,8 @@
     "debug": "node --inspect --loader ./lib/loader.mjs ./lib/empty.mjs"
   },
   "dependencies": {
-    "@css-extract/trace": "0.0.0",
-    "@css-extract/utils": "0.0.0",
+    "@css-extract/trace": "0.1.0",
+    "@css-extract/utils": "0.1.0",
     "@babel/parser": "^7.22.16",
     "@babel/traverse": "^7.22.15",
     "@babel/types": "^7.22.15",

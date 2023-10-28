@@ -1,6 +1,6 @@
 {
   "name": "@css-extract/trace",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "main": "lib/index.mjs",
   "types": "src/index.ts",
   "sideEffects": false,
@@ -20,7 +20,7 @@
     "build": "npx rollup -c rollup.config.js"
   },
   "dependencies": {
-    "@css-extract/utils": "0.0.0",
+    "@css-extract/utils": "0.1.0",
     "@babel/parser": "^7.22.16",
     "@babel/traverse": "^7.22.15",
     "@babel/types": "^7.22.15",
