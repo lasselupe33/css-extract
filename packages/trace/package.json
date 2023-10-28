@@ -20,7 +20,7 @@
     "build": "npx rollup -c rollup.config.js"
   },
   "dependencies": {
-    "@css-extract/utils": "*",
+    "@css-extract/utils": "0.0.0",
     "@babel/parser": "^7.22.16",
     "@babel/traverse": "^7.22.15",
     "@babel/types": "^7.22.15",

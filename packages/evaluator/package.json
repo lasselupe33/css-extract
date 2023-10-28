@@ -29,8 +29,8 @@
     "debug": "node --inspect --loader ./lib/loader.mjs ./lib/empty.mjs"
   },
   "dependencies": {
-    "@css-extract/trace": "*",
-    "@css-extract/utils": "*",
+    "@css-extract/trace": "0.0.0",
+    "@css-extract/utils": "0.0.0",
     "@babel/parser": "^7.22.16",
     "@babel/traverse": "^7.22.15",
     "@babel/types": "^7.22.15",

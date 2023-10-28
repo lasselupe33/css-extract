@@ -20,13 +20,7 @@
     "build": "npx rollup -c rollup.config.js"
   },
   "dependencies": {
-    "@babel/parser": "^7.22.16",
-    "@babel/traverse": "^7.22.15",
-    "@babel/types": "^7.22.15",
-    "@babel/generator": "^7.22.15",
-    "enhanced-resolve": "^5.15.0",
-    "fast-glob": "^3.3.1",
-    "esbuild": "^0.19.0"
+    "@css-extract/evaluator": "0.0.0"
   },
   "devDependencies": {
     "@tooling/typescript-config": "*",
