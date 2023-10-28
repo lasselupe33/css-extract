@@ -11,11 +11,5 @@ module.exports = (rollupConfig) => {
     );
   }
 
-  const useBabelConfig = process.env.ROLLUP_CONFIG === "linaria";
-
-  if (useBabelConfig) {
-    return require("./config.babel")(workspaceRoot, rollupConfig);
-  } else {
-    return require("./config.esbuild")(workspaceRoot, rollupConfig);
-  }
+  return require("./config.esbuild")(workspaceRoot, rollupConfig);
 };

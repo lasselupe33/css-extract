@@ -1,7 +1,7 @@
 import type {
   EvaluatedNode,
   EvaluationContext,
-} from "@css-extract/evaluator/backend";
+} from "./typings.evaluation-context";
 
 type AdditionalContext = {
   isGlobal?: boolean;

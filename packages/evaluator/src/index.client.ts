@@ -2,10 +2,9 @@ import type { ChildProcessWithoutNullStreams } from "child_process";
 import { spawn } from "child_process";
 import path from "path";
 
-import { MessagePrefixes } from "./constant.messages";
-import type { EvaluationResult } from "./core.evaluate";
+import type { EvaluationResult } from "@css-extract/utils";
 
-export type { EvaluationResult };
+import { MessagePrefixes } from "./constant.messages";
 
 export function makeEvaluator() {
   let preparer: ChildProcessWithoutNullStreams;

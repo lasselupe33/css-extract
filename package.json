@@ -24,7 +24,8 @@
     "prettier:format": "prettier --write .",
     "prettier:check": "prettier --check .",
     "cache:purge": "rimraf --glob '**/.turbo'; rimraf --glob '**/.cache'; rimraf --glob '**/.eslintcache'; rimraf --glob '**/.stylelintcache'; rimraf --glob '**/tsconfig.tsbuildinfo'; rimraf --glob '**/.next'; rimraf --glob 'packages/*/lib'; rimraf --glob 'dummy/*/lib'",
-    "prepare": "husky install || true"
+    "prepare": "husky install || true",
+    "changeset:deploy": "npx turbo run build && npm run eslint && npm run type-check && npx changeset deploy"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.7.1",

@@ -5,20 +5,6 @@ import { fileIterationMap, getTransitiveParents } from "./core.deps";
 import { evaluate } from "./core.evaluate";
 import { prepareFile } from "./core.prepare-file/core.prepare-file";
 
-export type { EvaluationContext, EvaluatedNode } from "./core.evaluate";
-
-type FilePath = string;
-
-export type VirtualFileSystem = Map<
-  FilePath,
-  {
-    content: string;
-    iteration: number;
-  }
->;
-
-export const vfs: VirtualFileSystem = new Map();
-
 export function initialize() {
   const rl = readline.createInterface({
     input: process.stdin,

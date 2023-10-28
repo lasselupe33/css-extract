@@ -19,9 +19,7 @@
     "dev": "npx rollup -c rollup.config.js --watch",
     "build": "npx rollup -c rollup.config.js"
   },
-  "dependencies": {
-    "@css-extract/evaluator": "0.1.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@tooling/typescript-config": "*",
     "@tooling/rollup-config": "*",
