@@ -11,7 +11,7 @@ import "./global";
 import "./formatted-list.style";
 import "./third";
 
-const green = "green";
+const green: string = "green";
 
 console.log("hi");
 

@@ -73,7 +73,9 @@ export function extractCssPlugin(): Plugin {
         return;
       }
 
-      const s = new MagicString(code);
+      const s = new MagicString(code, {
+        filename: id,
+      });
       let resultingCss = "";
 
       let index = 0;
@@ -99,13 +101,7 @@ export function extractCssPlugin(): Plugin {
 
       sourceMapCache.set(
         outputFileName,
-        s
-          .generateMap({
-            file: id,
-            hires: true,
-            includeContent: true,
-          })
-          .toString()
+        this.getCombinedSourcemap().toString()
       );
 
       const processedCss = await processCss(resultingCss, id, outputFileName);
@@ -118,7 +114,11 @@ export function extractCssPlugin(): Plugin {
 
       s.prepend(`import "./${getFileNameWithoutPath(outputFileName)}";\n`);
 
-      const map = s.generateMap({ hires: true });
+      const map = s.generateMap({
+        hires: true,
+        source: id,
+        includeContent: true,
+      });
 
       return {
         code: s.toString(),

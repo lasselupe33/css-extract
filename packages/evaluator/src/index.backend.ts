@@ -97,21 +97,3 @@ export function initialize() {
     process.exit(0);
   });
 }
-
-// async function changedDeps(filePath: string): Promise<string[]> {
-//   const dependencies = depedencyCache.get(filePath) ?? [];
-
-//   const changed = await Promise.all(
-//     [...dependencies].map(async (dependency) => {
-//       const content = getVirtualContent(dependency);
-//       const changedAt = (await fs.promises.stat(dependency)).mtimeMs;
-
-//       return [
-//         changedAt !== content?.sourceModifiedAtMs ? dependency : undefined,
-//         ...(await changedDeps(dependency)),
-//       ];
-//     })
-//   );
-
-//   return changed.flatMap((it) => it).filter((it): it is string => !!it);
-// }

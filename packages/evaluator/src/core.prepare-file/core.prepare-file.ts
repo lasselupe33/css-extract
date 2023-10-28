@@ -5,7 +5,7 @@ import { areArraysEqualSets } from "@css-extract/utils";
 
 import { trackDependency, updateFileIteration } from "../core.deps";
 import { getVirtualContent } from "../core.loader";
-import { vfs } from "../index.backend";
+import { vfs } from "../util.virtual-file-system";
 
 import type { AST } from "./stage.1.transform";
 import { transform } from "./stage.1.transform";

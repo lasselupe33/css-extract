@@ -4,8 +4,9 @@ import { supportedExtensions } from "@css-extract/utils";
 import enhancedResolve from "enhanced-resolve";
 
 import { getFileIteration } from "./core.deps";
-import { initialize, vfs } from "./index.backend";
+import { initialize } from "./index.backend";
 import { demo } from "./index.debug";
+import { vfs } from "./util.virtual-file-system";
 
 const resolver = enhancedResolve.create.sync({
   extensions: supportedExtensions,
