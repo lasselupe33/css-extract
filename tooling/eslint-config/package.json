@@ -1,6 +1,7 @@
 {
   "name": "@tooling/eslint-config",
   "version": "0.0.0",
+  "private": true,
   "scripts": {
     "eslint": "eslint --cache --no-error-on-unmatched-pattern --max-warnings 20 './*.{js,jsx,ts,tsx,mjs}'"
   },
