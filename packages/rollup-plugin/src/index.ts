@@ -42,32 +42,7 @@ export function extractCssPlugin(): Plugin {
         sourceBase = path.dirname(id);
       }
       const evaluatedCss = await evaluator.evaluate(id);
-
-      // Update CSS for all affected dependents
-      if (this.meta.watchMode) {
-        for (const [dependent, result] of evaluatedCss?.dependents ?? []) {
-          const css = result
-            .map((it) => `.${it.id} {${it.css.trim()}}`)
-            .join("\n");
-
-          const dependentOutputFileName = `${resolveOutputFileName(
-            dependent,
-            sourceBase
-          )}.extracted.css`;
-
-          const processedCss = await processCss(
-            css,
-            dependent,
-            dependentOutputFileName
-          );
-
-          this.emitFile({
-            type: "prebuilt-chunk",
-            fileName: dependentOutputFileName,
-            code: processedCss.css,
-          });
-        }
-      }
+      evaluatedCss.dependsOn.forEach((file) => this.addWatchFile(file));
 
       if (!evaluatedCss?.result || evaluatedCss.result.length === 0) {
         return;

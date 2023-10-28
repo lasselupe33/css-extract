@@ -20,12 +20,16 @@ const requestedExportsCache = new Map<
   FilePath,
   { identifiers: Set<NodeName>; cssPaths: Set<NodePath<t.Node>> }
 >();
+const encounteredImportsCache = new Map<
+  FilePath,
+  Map<FilePath, Map<FilePath, TracerEntrypoints>>
+>();
 
 export async function prepareFile(
   parentPath: string | undefined,
   filePath: string,
   entrypoints?: Omit<TracerEntrypoints, "paths">
-): Promise<boolean> {
+): Promise<{ hasCssPaths: boolean; dependsOn: string[] }> {
   const { ast, cssPaths } = await transform(filePath);
 
   const cached = evaluatedASTs.has(ast);
@@ -46,7 +50,19 @@ export async function prepareFile(
     areArraysEqualSets([...requestedExports.cssPaths], [...cssPaths])
   ) {
     trackDependency(filePath, parentPath);
-    return cssPaths.size > 0;
+
+    for (const [importedPath, value] of encounteredImportsCache
+      .get(filePath)
+      ?.entries() ?? []) {
+      for (const [parentPath, entrypoints] of value.entries()) {
+        await prepareFile(parentPath, importedPath, entrypoints);
+      }
+    }
+
+    return {
+      hasCssPaths: cssPaths.size > 0,
+      dependsOn: [...(encounteredImportsCache.get(filePath)?.keys() ?? [])],
+    };
   }
 
   evaluatedASTs.add(ast);
@@ -80,13 +96,18 @@ export async function prepareFile(
   await updateVFS(filePath, pruned.code);
   trackDependency(filePath, parentPath);
 
+  encounteredImportsCache.set(filePath, pruned.encounteredImports ?? new Map());
+
   for (const [filePath, value] of pruned.encounteredImports?.entries() ?? []) {
     for (const [parentPath, entrypoints] of value.entries()) {
       await prepareFile(parentPath, filePath, entrypoints);
     }
   }
 
-  return cssPaths.size > 0;
+  return {
+    hasCssPaths: cssPaths.size > 0,
+    dependsOn: [...(pruned.encounteredImports?.keys() ?? [])],
+  };
 }
 
 async function updateVFS(filePath: string, code: string) {

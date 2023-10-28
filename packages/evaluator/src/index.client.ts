@@ -39,13 +39,10 @@ export function makeEvaluator() {
 
   async function evaluate(filePath: string) {
     const evaluationFinishedKey = `${MessagePrefixes.EVALUATED_FILE}${filePath}:`;
-    const dependentEvaluatedKey = `${MessagePrefixes.EVALUATED_DEPENDENT}${filePath}:`;
-
-    const dependentChanges = new Map<string, EvaluationResult>();
 
     const promise = new Promise<{
       result: EvaluationResult | undefined;
-      dependents: Map<string, EvaluationResult>;
+      dependsOn: string[];
     }>((resolve, reject) => {
       const onError = (err: Error) => {
         preparer.stdout.off("data", callback);
@@ -61,22 +58,6 @@ export function makeEvaluator() {
         const result = lines.find((line) =>
           line.startsWith(evaluationFinishedKey)
         );
-        const dependentChanged = lines.find((line) =>
-          line.startsWith(dependentEvaluatedKey)
-        );
-
-        if (dependentChanged) {
-          const [dependentName, ...evaluationResult] = dependentChanged
-            .slice(dependentEvaluatedKey.length)
-            .split(":");
-
-          if (dependentName && evaluationResult) {
-            dependentChanges.set(
-              dependentName,
-              JSON.parse(evaluationResult.join(":"))
-            );
-          }
-        }
 
         if (!result) {
           return;
@@ -86,11 +67,23 @@ export function makeEvaluator() {
         preparer.stdout.off("error", onError);
 
         const rawResult = result.slice(evaluationFinishedKey.length);
-        const parsedResult = rawResult ? JSON.parse(rawResult) : undefined;
 
-        resolve({ result: parsedResult, dependents: dependentChanges });
+        const parsedResult = rawResult
+          ? (JSON.parse(rawResult) as {
+              results: EvaluationResult;
+              dependsOn: string[];
+            })
+          : undefined;
+
+        resolve({
+          result: parsedResult?.results,
+          dependsOn: parsedResult?.dependsOn ?? [],
+        });
       };
 
+      // Allow for up to a 1000 files being evaluated in parallel without
+      // warnings.
+      preparer.stdout.setMaxListeners(1000);
       preparer.stdout.on("data", callback);
       preparer.stdout.on("error", onError);
     });
@@ -110,25 +103,3 @@ export function makeEvaluator() {
     destroy,
   };
 }
-
-// async function tmp() {
-//   const TEMP_ROOT = "/Users/lassefelskovagersten/Code/misc/css-extractor";
-//   const demoRoot = path.join(TEMP_ROOT, "dummy", "package", "src");
-//   const entry1 = path.join(demoRoot, "shaker.ts");
-//   const entry2 = path.join(demoRoot, "shaker2.ts");
-//   const commonDependency = path.join(demoRoot, "common-dependency.ts");
-//   const irrelevant = path.join(demoRoot, "irrelevant.ts");
-
-//   await initialize();
-
-//   const res = await evaluate(entry1);
-//   console.log("Result", res);
-
-//   await evaluate(entry2);
-//   await evaluate(commonDependency);
-//   await evaluate(irrelevant);
-
-//   await destroy();
-// }
-
-// tmp();

@@ -55,39 +55,24 @@ export function initialize() {
           );
         }
 
-        const hasCssPaths = await prepareFile(undefined, filePath);
+        const { hasCssPaths, dependsOn } = await prepareFile(
+          undefined,
+          filePath
+        );
 
         if (hasCssPaths) {
           await evaluate(filePath);
         }
 
-        for (const dependent of dependents) {
-          const hasCssPaths = await prepareFile(undefined, dependent);
-
-          if (hasCssPaths) {
-            await evaluate(dependent);
-            const results = evalutationResults.get(dependent)?.values();
-
-            console.log(
-              `\n${
-                MessagePrefixes.EVALUATED_DEPENDENT
-              }${filePath}:${dependent}:${JSON.stringify(
-                [...(results ?? [])].sort(
-                  (a, b) => a.context.index - b.context.index
-                )
-              )}`
-            );
-          }
-        }
-
         const results = evalutationResults.get(filePath)?.values();
 
         console.log(
-          `\n${MessagePrefixes.EVALUATED_FILE}${filePath}:${JSON.stringify(
-            [...(results ?? [])].sort(
+          `\n${MessagePrefixes.EVALUATED_FILE}${filePath}:${JSON.stringify({
+            dependsOn,
+            results: [...(results ?? [])].sort(
               (a, b) => a.context.index - b.context.index
-            )
-          )}`
+            ),
+          })}`
         );
       })()
     );
